@@ -156,6 +156,7 @@ struct geth_priv {
 
 	spinlock_t lock;
 	spinlock_t tx_lock;
+	int gpio_power_hd;
 };
 
 #ifdef CONFIG_GETH_PHY_POWER
@@ -264,6 +265,10 @@ static void desc_print(struct dma_desc *desc, int size)
 static int geth_power_on(struct geth_priv *priv)
 {
 	int value;
+	if (gpio_is_valid(priv->gpio_power_hd)) {
+		gpio_set_value(priv->gpio_power_hd, 1);
+		mdelay(50);
+		}
 #ifdef CONFIG_GETH_PHY_POWER
 	struct regulator **regu;
 	int ret = 0, i = 0;
@@ -327,6 +332,10 @@ err:
 static void geth_power_off(struct geth_priv *priv)
 {
 	int value;
+	if (gpio_is_valid(priv->gpio_power_hd)) {
+		gpio_set_value(priv->gpio_power_hd, 0);
+		mdelay(50);
+		}
 #ifdef CONFIG_GETH_PHY_POWER
 	struct regulator **regu = priv->power;
 	int i = 0;
@@ -1644,6 +1653,15 @@ static int geth_script_parse(struct platform_device *pdev)
 		break;
 	}
 
+	priv->gpio_power_hd = -1;
+	type = script_get_item("gmac_phy_power", "gmac_phy_power_en", &item);
+	if (SCIRPT_ITEM_VALUE_TYPE_PIO == type) {
+		if (!gpio_request(item.gpio.gpio, NULL)) {
+			gpio_direction_output(item.gpio.gpio, 1);
+			priv->gpio_power_hd = item.gpio.gpio;
+		}
+	}
+
 #ifdef CONFIG_GETH_PHY_POWER
 	memset(power_tb, 0, sizeof(power_tb));
 	for (cnt = 0; cnt < ARRAY_SIZE(power_tb); cnt++) {
@@ -1689,6 +1707,10 @@ static int geth_sys_request(struct platform_device *pdev)
 	struct geth_priv *priv = netdev_priv(ndev);
 	int ret = 0;
 	struct resource *res;
+
+	script_item_value_type_e  type;
+	script_item_u item;
+	int req_status;
 
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "geth_extclk");
 	if (unlikely(!res)){
@@ -1763,6 +1785,20 @@ static int geth_sys_request(struct platform_device *pdev)
 		}
 	}
 #endif
+
+	type = script_get_item("gmac_phy_power", "gmac_phy_power_en", &item);
+	if (SCIRPT_ITEM_VALUE_TYPE_PIO != type) {
+		priv->gpio_power_hd = -1;
+	} else {
+		/*request gpio*/
+		req_status = gpio_request(item.gpio.gpio, NULL);
+		if (0 != req_status) {
+			pr_err("request gpio failed!\n");
+		}
+		gpio_direction_output(item.gpio.gpio, 1);
+		priv->gpio_power_hd = item.gpio.gpio;
+ 	}
+
 	return 0;
 
 pin_err:

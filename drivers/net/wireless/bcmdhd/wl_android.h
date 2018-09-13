@@ -3,7 +3,7 @@
  *
  * $Copyright Open Broadcom Corporation$
  *
- * $Id: wl_android.h 367305 2012-11-07 13:49:55Z $
+ * $Id: wl_android.h 487838 2014-06-27 05:51:44Z $
  */
 
 #ifndef _wl_android_
@@ -16,7 +16,7 @@
 /* If any feature uses the Generic Netlink Interface, put it here to enable WL_GENL
  * automatically
  */
-#ifdef WL_SDO
+#if defined(WL_SDO) || defined(BT_WIFI_HANDOVER) || defined(WL_NAN)
 #define WL_GENL
 #endif
 
@@ -41,17 +41,6 @@ void wl_android_post_init(void);
 int wl_android_wifi_on(struct net_device *dev);
 int wl_android_wifi_off(struct net_device *dev);
 int wl_android_priv_cmd(struct net_device *net, struct ifreq *ifr, int cmd);
-
-#if defined(CONFIG_WIFI_CONTROL_FUNC)
-int wl_android_wifictrl_func_add(void);
-void wl_android_wifictrl_func_del(void);
-void* wl_android_prealloc(int section, unsigned long size);
-
-int wifi_get_irq_number(unsigned long *irq_flags_ptr);
-int wifi_set_power(int on, unsigned long msec);
-int wifi_get_mac_addr(unsigned char *buf);
-void *wifi_get_country_code(char *ccode);
-#endif /* CONFIG_WIFI_CONTROL_FUNC */
 
 #ifdef WL_GENL
 typedef struct bcm_event_hdr {
@@ -87,22 +76,41 @@ enum {
 	BCM_E_SVC_FOUND,
 	BCM_E_DEV_FOUND,
 	BCM_E_DEV_LOST,
+	BCM_E_DEV_BT_WIFI_HO_REQ,
 	BCM_E_MAX
 };
 
 s32 wl_genl_send_msg(struct net_device *ndev, u32 event_type,
 	u8 *string, u16 len, u8 *hdr, u16 hdrlen);
 #endif /* WL_GENL */
+s32 wl_netlink_send_msg(int pid, int type, int seq, void *data, size_t size);
+
+/* hostap mac mode */
+#define MACLIST_MODE_DISABLED   0
+#define MACLIST_MODE_DENY       1
+#define MACLIST_MODE_ALLOW      2
+
+/* max number of assoc list */
+#define MAX_NUM_OF_ASSOCLIST    64
+
+/* max number of mac filter list
+ * restrict max number to 10 as maximum cmd string size is 255
+ */
+#define MAX_NUM_MAC_FILT        10
+
+int wl_android_set_ap_mac_list(struct net_device *dev, int macmode, struct maclist *maclist);
 
 /* terence:
  * BSSCACHE: Cache bss list
  * RSSAVG: Average RSSI of BSS list
  * RSSIOFFSET: RSSI offset
+ * SORT_BSS_BY_RSSI: Sort BSS by RSSI
  */
-#define BSSCACHE
-#define RSSIAVG
-#define RSSIOFFSET
+//#define BSSCACHE
+//#define RSSIAVG
+//#define RSSIOFFSET
 //#define RSSIOFFSET_NEW
+//#define SORT_BSS_BY_RSSI
 
 #define RSSI_MAXVAL -2
 #define RSSI_MINVAL -200
@@ -147,7 +155,7 @@ int16 wl_get_avg_rssi(wl_rssi_cache_ctrl_t *rssi_cache_ctrl, void *addr);
 #endif
 #define BCM4330_CHIP_ID		0x4330
 #define BCM4330B2_CHIP_REV      4
-int wl_update_rssi_offset(int rssi);
+int wl_update_rssi_offset(struct net_device *net, int rssi);
 #endif
 
 #if defined(BSSCACHE)
@@ -168,7 +176,11 @@ void wl_free_bss_cache(wl_bss_cache_ctrl_t *bss_cache_ctrl);
 void wl_delete_dirty_bss_cache(wl_bss_cache_ctrl_t *bss_cache_ctrl);
 void wl_delete_disconnected_bss_cache(wl_bss_cache_ctrl_t *bss_cache_ctrl, u8 *bssid);
 void wl_reset_bss_cache(wl_bss_cache_ctrl_t *bss_cache_ctrl);
-void wl_update_bss_cache(wl_bss_cache_ctrl_t *bss_cache_ctrl, wl_scan_results_t *ss_list);
+void wl_update_bss_cache(wl_bss_cache_ctrl_t *bss_cache_ctrl,	
+#if defined(RSSIAVG)
+	wl_rssi_cache_ctrl_t *rssi_cache_ctrl,
+#endif
+	wl_scan_results_t *ss_list);
 void wl_release_bss_cache_ctrl(wl_bss_cache_ctrl_t *bss_cache_ctrl);
 #endif
 #endif /* _wl_android_ */
