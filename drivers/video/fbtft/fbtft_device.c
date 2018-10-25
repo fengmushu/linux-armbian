@@ -108,7 +108,7 @@ static int init_num;
 module_param_array(init, int, &init_num, 0);
 MODULE_PARM_DESC(init, "Init sequence, used with the custom argument");
 
-static unsigned long debug;
+static unsigned long debug = 7;
 module_param(debug, ulong , 0);
 MODULE_PARM_DESC(debug,
 "level: 0-7 (the remaining 29 bits is for advanced usage)");
@@ -707,6 +707,23 @@ static struct fbtft_device_display displays[] = {
 				.gpios = (const struct fbtft_gpio []) {
 					{ "reset", 25 },
 					{ "dc", 24 },
+					{},
+				},
+			}
+		}
+	}, {
+		.name = "fb_st7735s",
+		.spi = &(struct spi_board_info) {
+			.modalias = "fb_st7735s",
+			.max_speed_hz = 32000000,
+			.mode = SPI_MODE_0,
+			.platform_data = &(struct fbtft_platform_data) {
+				.display = {
+					.buswidth = 8,
+				},
+				.gpios = (const struct fbtft_gpio []) {
+					{ "reset", 2 },
+					{ "dc", 3 },
 					{},
 				},
 			}
