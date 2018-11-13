@@ -181,6 +181,9 @@ static __s32 Parse_DTD_Block(__u8 *pbuf)
 		if ((sizex== 1680) && (sizey == 1050)) {
 			Device_Support_VIC[HDMI1680_1050P] = 1;
  		}
+		if ((sizex== 1600) && (sizey == 900)) {
+			Device_Support_VIC[HDMI1600_900P] = 1;
+ 		}
 		if ((sizex== 2048) && (sizey == 1536)) {
 			Device_Support_VIC[HDMI2048_1536P] = 1;
 		}
@@ -218,6 +221,9 @@ static __s32 Parse_DTD_Block(__u8 *pbuf)
 		}
 		if ((sizex== 1680) && (sizey == 1050)) {
 			Device_Support_VIC[HDMI1680_1050P] = 1;
+ 		}
+		if ((sizex== 1600) && (sizey == 900)) {
+			Device_Support_VIC[HDMI1600_900P] = 1;
  		}
 		if ((sizex== 2048) && (sizey == 1536)) {
 			Device_Support_VIC[HDMI2048_1536P] = 1;
