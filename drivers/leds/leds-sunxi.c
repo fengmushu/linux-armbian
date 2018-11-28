@@ -16,17 +16,22 @@
 
 struct gpio_led gpio_leds[] = {
 {
-        .name                   = "default_led",
+        .name                   = "QPT_LED2",
         .default_trigger        = "none",
         .gpio                   = 0xffff,
         .retain_state_suspended = 1,
         }, {
-        .name                   = "default_led",
+        .name                   = "QPT_LED3",
         .default_trigger        = "none",
         .gpio                   = 0xffff,
         .retain_state_suspended = 1,
         }, {
-        .name                   = "default_led",
+        .name                   = "QPT_LED4",
+        .default_trigger        = "none",
+        .gpio                   = 0xffff,
+        .retain_state_suspended = 1,
+        }, {
+        .name                   = "QPT_LED5",
         .default_trigger        = "none",
         .gpio                   = 0xffff,
         .retain_state_suspended = 1,
@@ -51,7 +56,7 @@ static int sunxi_leds_fetch_sysconfig_para(void)
         int num = 0,i = 0;
         script_item_u   val;
         script_item_value_type_e  type;
-        static char* led_name[3] = {"red_led","green_led","blue_led"};
+        static char* led_name[4] = {"QPT_LED2","QPT_LED3","QPT_LED4","QPT_LED5"};
         char led_active_low[25];
 
         type = script_get_item("leds_para", "leds_used", &val);
