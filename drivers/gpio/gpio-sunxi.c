@@ -538,7 +538,7 @@ static int __init gpio_sw_init(void)
 
     used = val.val;
     if(!used){
-        printk(KERN_ERR "this module is used not!\n");
+        printk(KERN_ERR "%s: this module is used not!\n", __func__);
         goto INIT_END;
     }
 

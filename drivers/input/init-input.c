@@ -683,7 +683,7 @@ static int ths_fetch_sysconfig_para(enum input_sensor_type *ths_type)
 	type = script_get_item("ths_para", "ths_trend", &val);
 
 	if (SCIRPT_ITEM_VALUE_TYPE_INT != type) {
-		pr_err("%s: type err  device_used = %d. \n", __func__, val.val);
+		pr_err("%s: type err  ths_trend = %d. \n", __func__, val.val);
 	} else
 		data->ths_trend = val.val;
 

@@ -91,7 +91,7 @@ static s32 disp_enhance_update_regs(struct disp_enhance* enhance)
 	/* size likely change while it depend on layer size */
 	//if(enhancep->applied) {
 	{
-		DE_INF("enhance %d, enable=%d\n", enhance->disp, enhancep->config.info.enable);
+		// DE_INF("enhance %d, enable=%d\n", enhance->disp, enhancep->config.info.enable);
 		disp_al_enhance_update_regs(enhance->disp);
 	}
 
