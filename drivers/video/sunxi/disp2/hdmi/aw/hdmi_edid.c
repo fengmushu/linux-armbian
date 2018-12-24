@@ -354,7 +354,7 @@ static __s32 Check_EDID(__u8 *buf_src, __u8*buf_dst)
 	return 0;
 }
 
-
+extern void edid_print_info(void*);
 __s32 ParseEDID(void)
 {
 	//collect the EDID ucdata of segment 0
@@ -459,6 +459,10 @@ __s32 ParseEDID(void)
 			}
 		}
 	}
+
+	printk("\n********************* DUMP EDID *******************\n");
+	edid_print_info((void*)EDID_Buf);
+	printk("\n***************************************************\n");
 
 	return 0 ;
 
