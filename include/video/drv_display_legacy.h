@@ -52,17 +52,17 @@ typedef enum
 
 typedef enum
 {
-    DISP_MOD_INTERLEAVED        =0x1,   //interleaved,1¸öµØÖ·
-    DISP_MOD_NON_MB_PLANAR      =0x0,   //ÎÞºê¿éÆ½ÃæÄ£Ê½,3¸öµØÖ·,RGB/YUVÃ¿¸öchannel·Ö±ð´æ·Å
-    DISP_MOD_NON_MB_UV_COMBINED =0x2,   //ÎÞºê¿éUV´ò°üÄ£Ê½,2¸öµØÖ·,YºÍUV·Ö±ð´æ·Å
-    DISP_MOD_MB_PLANAR          =0x4,   //ºê¿éÆ½ÃæÄ£Ê½,3¸öµØÖ·,RGB/YUVÃ¿¸öchannel·Ö±ð´æ·Å
-    DISP_MOD_MB_UV_COMBINED     =0x6,   //ºê¿éUV´ò°üÄ£Ê½ ,2¸öµØÖ·,YºÍUV·Ö±ð´æ·Å
+    DISP_MOD_INTERLEAVED        =0x1,   //interleaved,1ï¿½ï¿½ï¿½ï¿½Ö·
+    DISP_MOD_NON_MB_PLANAR      =0x0,   //ï¿½Þºï¿½ï¿½Æ½ï¿½ï¿½Ä£Ê½,3ï¿½ï¿½ï¿½ï¿½Ö·,RGB/YUVÃ¿ï¿½ï¿½channelï¿½Ö±ï¿½ï¿½ï¿½
+    DISP_MOD_NON_MB_UV_COMBINED =0x2,   //ï¿½Þºï¿½ï¿½UVï¿½ï¿½ï¿½Ä£Ê½,2ï¿½ï¿½ï¿½ï¿½Ö·,Yï¿½ï¿½UVï¿½Ö±ï¿½ï¿½ï¿½
+    DISP_MOD_MB_PLANAR          =0x4,   //ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Ä£Ê½,3ï¿½ï¿½ï¿½ï¿½Ö·,RGB/YUVÃ¿ï¿½ï¿½channelï¿½Ö±ï¿½ï¿½ï¿½
+    DISP_MOD_MB_UV_COMBINED     =0x6,   //ï¿½ï¿½ï¿½UVï¿½ï¿½ï¿½Ä£Ê½ ,2ï¿½ï¿½ï¿½ï¿½Ö·,Yï¿½ï¿½UVï¿½Ö±ï¿½ï¿½ï¿½
 }__disp_pixel_mod_t;
 
 typedef enum
 {
 //for interleave argb8888
-    DISP_SEQ_ARGB   =0x0,//AÔÚ¸ßÎ»
+    DISP_SEQ_ARGB   =0x0,//Aï¿½Ú¸ï¿½Î»
     DISP_SEQ_BGRA   =0x2,
     
 //for nterleaved yuv422
@@ -80,12 +80,12 @@ typedef enum
     DISP_SEQ_VUVU   =0xa,
     
 //for 16bpp rgb
-    DISP_SEQ_P10    = 0xd,//p1ÔÚ¸ßÎ»
-    DISP_SEQ_P01    = 0xe,//p0ÔÚ¸ßÎ»
+    DISP_SEQ_P10    = 0xd,//p1ï¿½Ú¸ï¿½Î»
+    DISP_SEQ_P01    = 0xe,//p0ï¿½Ú¸ï¿½Î»
     
 //for planar format or 8bpp rgb
-    DISP_SEQ_P3210  = 0xf,//p3ÔÚ¸ßÎ»
-    DISP_SEQ_P0123  = 0x10,//p0ÔÚ¸ßÎ»
+    DISP_SEQ_P3210  = 0xf,//p3ï¿½Ú¸ï¿½Î»
+    DISP_SEQ_P0123  = 0x10,//p0ï¿½Ú¸ï¿½Î»
     
 //for 4bpp rgb
     DISP_SEQ_P76543210  = 0x11,
@@ -207,7 +207,7 @@ typedef enum
 {
     DISP_VGA_H1680_V1050    = 0,
     DISP_VGA_H1440_V900     = 1,
-    DISP_VGA_H1360_V768     = 2,
+    DISP_VGA_H1366_V768     = 2,
     DISP_VGA_H1280_V1024    = 3,
     DISP_VGA_H1024_V768     = 4,
     DISP_VGA_H800_V600      = 5,
@@ -452,8 +452,8 @@ typedef enum
 
 typedef struct
 {
-    __u32                   addr[3];    // frame bufferµÄÄÚÈÝµØÖ·£¬¶ÔÓÚrgbÀàÐÍ£¬Ö»ÓÐaddr[0]ÓÐÐ§
-    __disp_rectsz_t         size;//µ¥Î»ÊÇpixel
+    __u32                   addr[3];    // frame bufferï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rgbï¿½ï¿½ï¿½Í£ï¿½Ö»ï¿½ï¿½addr[0]ï¿½ï¿½Ð§
+    __disp_rectsz_t         size;//ï¿½ï¿½Î»ï¿½ï¿½pixel
     __disp_pixel_fmt_t      format;
     __disp_pixel_seq_t      seq;
     __disp_pixel_mod_t      mode;
@@ -470,7 +470,7 @@ typedef struct
     __disp_layer_work_mode_t    mode;       //layer work mode
     __bool                      b_from_screen;
     __u8                        pipe;       //layer pipe,0/1,if in scaler mode, scaler0 must be pipe0, scaler1 must be pipe1
-    __u8                        prio;       //layer priority,can get layer prio,but never set layer prio,´Óµ×ÖÁ¶¥,ÓÅÏÈ¼¶ÓÉµÍÖÁ¸ß
+    __u8                        prio;       //layer priority,can get layer prio,but never set layer prio,ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½È¼ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½
     __bool                      alpha_en;   //layer global alpha enable
     __u16                       alpha_val;  //layer global alpha value 
     __bool                      ck_enable;  //layer color key enable
@@ -497,7 +497,7 @@ typedef struct
     __u32   addr_right[3];//used when in frame packing 3d mode
     __bool  interlace;
     __bool  top_field_first;
-    __u32   frame_rate; // *FRAME_RATE_BASE(ÏÖÔÚ¶¨Îª1000)
+    __u32   frame_rate; // *FRAME_RATE_BASE(ï¿½ï¿½ï¿½Ú¶ï¿½Îª1000)
     __u32   flag_addr;//dit maf flag address
     __u32   flag_stride;//dit maf flag line stride
     __bool  maf_valid;

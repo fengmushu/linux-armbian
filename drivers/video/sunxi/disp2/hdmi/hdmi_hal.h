@@ -19,7 +19,7 @@
 #define HDMI800_480P            35
 #define HDMI1024_768P           36
 #define HDMI1280_1024P          37
-#define HDMI1360_768P           38
+#define HDMI1366_768P           38
 #define HDMI1440_900P           39
 #define HDMI1680_1050P          40
 #define HDMI2048_1536P          41
