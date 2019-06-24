@@ -5,6 +5,9 @@ build_modules()
     # ENV
     make CROSS_COMPILE=arm-linux-gnueabihf- arch=arm -j4 || exit -1
 
+    # Install zImage to fakeroot~
+    cp `pwd`/arch/arm/boot/zImage `pwd`/fakeroot/boot/
+
     # Prepare
     mkdir -p fakeroot/lib/modules
 
