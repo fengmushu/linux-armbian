@@ -34,15 +34,23 @@
 #include <video/sunxi_display2.h>
 #include <video/drv_hdmi.h>
 
+#define HDMI_LOG_INFO (0x1<<0)
+#define HDMI_LOG_ERRO (0x1<<1)
+#define HDMI_LOG_WARN (0x1<<2)
+#define HDMI_LOG_DBGX (0x1<<3)
+#define HDMI_LOG_TRAC (0x1<<4)
+
 extern __u32 hdmi_print;
 extern __u32 rgb_only;
 extern __u32 hdmi_hpd_mask;//0x10: force unplug; 0x11: force plug
 
+#define HDMI_LOG_DEFAULT (HDMI_LOG_INFO | HDMI_LOG_ERRO | HDMI_LOG_WARN | HDMI_LOG_TRAC)
+
 #define OSAL_PRINTF(msg...) do{printk(KERN_WARNING "[HDMI] ");printk(msg);}while(0)
-#define __inf(msg...)       do{if(hdmi_print){printk(KERN_WARNING "[HDMI] ");printk(msg);}}while(0)
-#define __msg(msg...)       do{if(hdmi_print){printk(KERN_WARNING "[HDMI] file:%s,line:%d:",__FILE__,__LINE__);printk(msg);}}while(0)
-#define __wrn(msg...)       do{printk(KERN_WARNING "[HDMI WRN] file:%s,line:%d:    ",__FILE__,__LINE__);printk(msg);}while(0)
-#define __here__            do{if(hdmi_print){printk(KERN_WARNING "[HDMI] file:%s,line:%d\n",__FILE__,__LINE__);}}while(0)
+#define __inf(msg...)       do{if(hdmi_print & HDMI_LOG_INFO){printk(KERN_WARNING "[HDMI] %s,%d: ", __func__, __LINE__);printk(msg);}}while(0)
+#define __msg(msg...)       do{if(hdmi_print & HDMI_LOG_ERRO){printk(KERN_WARNING "[HDMI] %s,line:%d: ", __FILE__, __LINE__);printk(msg);}}while(0)
+#define __wrn(msg...)       do{if(hdmi_print & HDMI_LOG_DBGX){printk(KERN_WARNING "[HDMI WRN] %s,line:%d: ",__FILE__,__LINE__);printk(msg);}}while(0)
+#define __here__            do{if(hdmi_print & HDMI_LOG_TRAC){printk(KERN_WARNING "[HDMI TRC] %s,%s,line:%d\n",__FILE__, __func__, __LINE__);}}while(0)
 
 
 __s32 Hdmi_init(void);

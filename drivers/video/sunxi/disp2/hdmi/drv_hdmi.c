@@ -419,6 +419,8 @@ __s32 Hdmi_get_video_timming_info(disp_video_timings **video_info)
 	int ret = -1;
 	int i, list_num;
 
+	__inf("info vic: %d\n", video_timing->vic);
+
 	info = video_timing;
 	list_num = Hdmi_hal_get_list_num();
 	for(i=0; i<list_num; i++) {

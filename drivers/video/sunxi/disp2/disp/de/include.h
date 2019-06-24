@@ -49,11 +49,17 @@
 
 s32 bsp_disp_get_print_level(void);
 
-#define __inf(msg...)       do{if(bsp_disp_get_print_level()){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
-#define __msg(msg...)       do{if(bsp_disp_get_print_level()){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
-#define __wrn(msg...)       do{{printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
-#define __here__            do{if(bsp_disp_get_print_level()==2){printk(KERN_WARNING "[DISP] %s,line:%d\n",__func__,__LINE__);}}while(0)
-#define __debug(msg...)     do{if(bsp_disp_get_print_level()==2){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
+#define LOG_LEVEL_INFO (0x1<<0)
+#define LOG_LEVEL_ERRO (0x1<<1)
+#define LOG_LEVEL_WARN (0x1<<2)
+#define LOG_LEVEL_DBGX (0x1<<3)
+#define LOG_TRACE_LINE (0x1<<4)
+
+#define __inf(msg...)       do{if(bsp_disp_get_print_level() & LOG_LEVEL_INFO){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
+#define __msg(msg...)       do{if(bsp_disp_get_print_level() & LOG_LEVEL_ERRO){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
+#define __wrn(msg...)       do{if(bsp_disp_get_print_level() & LOG_LEVEL_WARN){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
+#define __debug(msg...)     do{if(bsp_disp_get_print_level() & LOG_LEVEL_DBGX){printk(KERN_WARNING "[DISP] %s,line:%d:",__func__,__LINE__);printk(msg);}}while(0)
+#define __here__            do{if(bsp_disp_get_print_level() & LOG_TRACE_LINE){printk(KERN_WARNING "[DISP] %s,line:%d\n",__func__,__LINE__);}}while(0)
 
 #endif//end of define __LINUX_PLAT__
 
@@ -100,7 +106,7 @@ s32 bsp_disp_get_print_level(void);
 #endif
 #endif
 
-#define DEFAULT_PRINT_LEVLE 0
+#define DEFAULT_PRINT_LEVLE 0 //(LOG_TRACE_LINE | LOG_LEVEL_INFO | LOG_LEVEL_ERRO)
 #if defined(CONFIG_FPGA_V4_PLATFORM) || defined(CONFIG_FPGA_V7_PLATFORM) || defined(CONFIG_A67_FPGA)
 #define __FPGA_DEBUG__
 #endif

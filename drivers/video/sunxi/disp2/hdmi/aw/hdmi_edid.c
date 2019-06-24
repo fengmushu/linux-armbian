@@ -7,6 +7,17 @@ __u32		rgb_only = 0;
 __u8		EDID_Buf[HDMI_EDID_LEN];
 __u8 		Device_Support_VIC[512];
 
+static __u8 EDID_Default[HDMI_EDID_LEN] = {
+0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x31, 0xd8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x05, 0x16, 0x01, 0x03, 0x6d, 0x23, 0x1a, 0x78, 0xea, 0x5e, 0xc0, 0xa4, 0x59, 0x4a, 0x98, 0x25,
+0x20, 0x50, 0x54, 0x00, 0x08, 0x00, 0x61, 0x40, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x64, 0x19, 0x00, 0x40, 0x41, 0x00, 0x26, 0x30, 0x08, 0x90,
+0x36, 0x00, 0x63, 0x0a, 0x11, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0xff, 0x00, 0x4c, 0x69, 0x6e,
+0x75, 0x78, 0x20, 0x23, 0x30, 0x0a, 0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0xfd, 0x00, 0x3b,
+0x3d, 0x2f, 0x31, 0x07, 0x00, 0x0a, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0xfc,
+0x00, 0x4c, 0x69, 0x6e, 0x75, 0x78, 0x20, 0x58, 0x47, 0x41, 0x0a, 0x20, 0x20, 0x20, 0x00, 0x55,
+};
+
 static __u8 exp0[16] =
 {
 	0x36,0x74,0x4d,0x53,0x74,0x61,0x72,0x20,0x44,0x65,0x6d,0x6f,0x0a,0x20,0x20,0x38
@@ -17,9 +28,12 @@ static __u8 exp1[16] =
 	0x2d,0xee,0x4b,0x4f,0x4e,0x41,0x4b,0x20,0x54,0x56,0x0a,0x20,0x20,0x20,0x20,0xa5
 };
 
-void DDC_Init(void)
+static void DDC_Init(void)
 {
+	printk("@@-ken-@@: DDC_Init set default edid\n");
+	memcpy(EDID_Buf, EDID_Default, sizeof(EDID_Default));
 }
+
 /*
 void send_ini_sequence()
 {
@@ -43,7 +57,9 @@ void send_ini_sequence()
 __s32 DDC_Read(char cmd,char pointer,char offset,int nbyte,char * pbuf)
 {
 	__inf("DDC_Read\n");
-	bsp_hdmi_ddc_read(cmd,pointer,offset,128,pbuf);
+	if(bsp_hdmi_ddc_read(cmd, pointer, offset, 128, pbuf) < 0) {
+		DDC_Init();
+	}
 	return 0;
 }
 
@@ -52,10 +68,10 @@ __s32 DDC_Read(char cmd,char pointer,char offset,int nbyte,char * pbuf)
 static void GetEDIDData(__u8 block,__u8 *buf)
 {
 	__u8 i;
-	__u8 * pbuf = buf + 128*block;
-	__u8 offset = (block&0x01)? 128:0;
+	__u8 * pbuf = buf + 128 * block;
+	__u8 offset = (block & 0x01) ? 128 : 0;
 
-	DDC_Read(Explicit_Offset_Address_E_DDC_Read,block>>1,offset,128,pbuf);
+	DDC_Read(Explicit_Offset_Address_E_DDC_Read, block>>1, offset, 128, pbuf);
 
 	////////////////////////////////////////////////////////////////////////////
 	__inf("Sink : EDID bank %d:\n",block);
@@ -90,7 +106,7 @@ static __s32 EDID_CheckSum(__u8 block,__u8 *buf)
 		CheckSum &= 0xFF ;
 	}
 	if( CheckSum != 0 ) {
-		__inf("EDID block %d checksum error\n",block);
+		pr_err("EDID block %d checksum error\n",block);
 		return -1 ;
 	}
 
@@ -243,8 +259,8 @@ static __s32 Parse_DTD_Block(__u8 *pbuf)
 			Device_Support_VIC[HDMI1080P_24] = 1;
 		}
 	}
-	__inf("PCLK=%d\tXsize=%d\tYsize=%d\tFrame_rate=%d\n",
-	pclk*10000,sizex,sizey,frame_rate);
+	__inf("offset: 0x%x - PCLK=%d\tXsize=%d\tYsize=%d\tFrame_rate=%d\n",
+				(pbuf - EDID_Buf),pclk*10000,sizex,sizey,frame_rate);
 
 	return 0;
 }
@@ -361,7 +377,7 @@ __s32 ParseEDID(void)
 	__u8 BlockCount ;
 	__u32 i,offset ;
 
-	__inf("ParseEDID\n");
+	__inf("\n **** Parse-EDID ****\n");
 
 	memset(Device_Support_VIC,0,sizeof(Device_Support_VIC));
 	memset(EDID_Buf,0,sizeof(EDID_Buf));
@@ -373,13 +389,13 @@ __s32 ParseEDID(void)
 	GetEDIDData(0, EDID_Buf);
 
 	if( EDID_CheckSum(0, EDID_Buf) != 0)
-		return 0;
+		goto __err;
 
 	if( EDID_Header_Check(EDID_Buf)!= 0)
-		return 0;
+		goto __err;
 
 	if( EDID_Version_Check(EDID_Buf)!= 0)
-		return 0;
+		goto __err;
 
 	Parse_DTD_Block(EDID_Buf + 0x36);
 
@@ -401,7 +417,7 @@ __s32 ParseEDID(void)
 		for( i = 1 ; i <= BlockCount ; i++ ) {
 			GetEDIDData(i, EDID_Buf) ;
 			if( EDID_CheckSum(i, EDID_Buf)!= 0)
-				return 0;
+				goto __err;
 
 			if((EDID_Buf[0x80*i+0]==2)/*&&(EDID_Buf[0x80*i+1]==1)*/)
 			{
@@ -427,7 +443,7 @@ __s32 ParseEDID(void)
 						__u8 len = EDID_Buf[0x80*i+bsum]&0x1f;
 						if( (len >0) && ((bsum + len + 1) > offset) ) {
 							__inf("len or bsum size error\n");
-							return 0;
+							goto __err;
 						} else {
 							if( tag == 1) {
 								/* ADB */
@@ -463,9 +479,15 @@ __s32 ParseEDID(void)
 	printk("\n********************* DUMP EDID *******************\n");
 	edid_print_info((void*)EDID_Buf);
 	printk("\n***************************************************\n");
-
 	return 0 ;
 
+__err:
+	DDC_Init();
+	printk("\n********************* DUMP Default EDID *******************\n");
+	edid_print_info((void*)EDID_Buf);
+	printk("\n***************************************************\n");
+	WARN_ON(1);
+	return 0;
 }
 
 __u32 GetIsHdmi(void)
