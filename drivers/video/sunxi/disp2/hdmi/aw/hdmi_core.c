@@ -168,7 +168,7 @@ __s32 hdmi_main_task_loop(void)
 
 			hdmi_state = HDMI_State_Wait_Hpd;
 		case HDMI_State_Wait_Hpd:
-			__inf("HDMI_State_Wait_Hpd\n");
+			// __inf("HDMI_State_Wait_Hpd\n");
 			//bsp_hdmi_init();
 			if(HPD) {
 				hdmi_state = HDMI_State_EDID_Parse;
