@@ -763,6 +763,10 @@ s32 bsp_disp_get_screen_width_from_output_type(u32 disp, u32 output_type, u32 ou
 			width = 1280;
 			height = 1024;
 			break;
+		case DISP_TV_MOD_1360_768P:
+			width = 1360;
+			height = 768;
+			break;
 		case DISP_TV_MOD_1366_768P:
 			width = 1366;
 			height = 768;
