@@ -188,6 +188,12 @@ static __s32 Parse_DTD_Block(__u8 *pbuf)
 		if ((sizex== 1280) && (sizey == 1024)) {
 			Device_Support_VIC[HDMI1280_1024P] = 1;
 		}
+		if ((sizex== 1280) && (sizey == 768)) {
+			Device_Support_VIC[HDMI1280_768P] = 1;
+		}
+		if ((sizex== 1280) && (sizey == 800)) {
+			Device_Support_VIC[HDMI1280_800P] = 1;
+		}
 		if ((sizex== 1360) && (sizey == 768)) {
 			Device_Support_VIC[HDMI1360_768P] = 1;
 		}

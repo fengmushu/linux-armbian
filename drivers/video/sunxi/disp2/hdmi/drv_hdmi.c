@@ -287,6 +287,8 @@ static struct disp_hdmi_mode hdmi_mode_tbl[] = {
 	{DISP_TV_MOD_800_480P,            HDMI800_480P,      },
 	{DISP_TV_MOD_1024_768P,           HDMI1024_768P,     },
 	{DISP_TV_MOD_1280_1024P,          HDMI1280_1024P,    },
+	{DISP_TV_MOD_1280_800P,           HDMI1280_800P,     },
+	{DISP_TV_MOD_1280_768P,           HDMI1280_768P,     },
 	{DISP_TV_MOD_1360_768P,           HDMI1360_768P,     },
 	{DISP_TV_MOD_1366_768P,           HDMI1366_768P,     },
 	{DISP_TV_MOD_1440_900P,           HDMI1440_900P,     },
