@@ -148,6 +148,7 @@ static int sunxi_keyboard_resume(struct device *dev)
 
 static int sunxigk_script_init(void)
 {
+	int re;
 	script_item_u	val;
 	script_item_value_type_e  type;
 
@@ -165,7 +166,12 @@ static int sunxigk_script_init(void)
 			return -1;
 		}
 		power_key_io = val.gpio;
-		dprintk(DEBUG_INT,"%s power key io number = %d.\n", __func__, power_key_io.gpio);
+		if(gpio_request(power_key_io.gpio, "powerkey") == 0) {
+			dprintk(DEBUG_INT,"%s power key io number = %d.\n", __func__, power_key_io.gpio);
+		} else {
+			pr_err("%s power key io req %d failed.\n", __func__, power_key_io.gpio);
+			return -1;
+		}
 
 		/* get the power control GPIO: PL10(H3V1) */
 		type = script_get_item("gpio_power_key", "key_ctl", &val);
@@ -174,7 +180,13 @@ static int sunxigk_script_init(void)
 			return -1;
 		}
 		power_key_ctl = val.gpio;
-		dprintk(DEBUG_INT,"%s power control io number = %d.\n", __func__, power_key_ctl.gpio);
+		if(gpio_request(power_key_ctl.gpio, "powerctl") == 0) {
+			dprintk(DEBUG_INT,"%s power control io number = %d.\n", __func__, power_key_ctl.gpio);
+		} else {
+			pr_err("%s power control io %d req failed\n", __func__, power_key_ctl.gpio);
+			gpio_free(power_key_io.gpio);
+			return -1;
+		}
 	}else{
 		dprintk(DEBUG_INT,"sunxi io power key no used.\n");
 		return -1;
@@ -191,7 +203,7 @@ static int __init sunxigk_init(void)
 	dprintk(DEBUG_INIT, "sunxigk_init \n");
 	if(sunxigk_script_init()){
 		err = -EFAULT;
-		goto fail1;
+		goto fail0;
 	}
 	
 	sunxigk_dev = input_allocate_device();
@@ -242,8 +254,10 @@ fail3:
 fail2:	
 	input_free_device(sunxigk_dev);
 fail1:
+	gpio_free(power_key_io.gpio);
+	gpio_free(power_key_ctl.gpio);
+fail0:
 	printk(KERN_DEBUG "sunxikbd_init failed. \n");
-
 	return err;
 }
 
@@ -251,6 +265,8 @@ static void __exit sunxigk_exit(void)
 {	
 	del_timer_sync(&timer_poweroff);
 	devm_free_irq(&sunxigk_dev->dev, gpio_to_irq(power_key_io.gpio), NULL);
+	gpio_free(power_key_io.gpio);
+	gpio_free(power_key_ctl.gpio);
 	input_unregister_device(sunxigk_dev);
 }
 
