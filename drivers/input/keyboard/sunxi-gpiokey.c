@@ -37,7 +37,7 @@ static u32 debug_mask = 255;
 
 module_param_named(debug_mask, debug_mask, int, 0644);
 
-static u32 default_delay = (15 * HZ); /* MS to delay */
+static u32 default_delay = (35 * HZ); /* MS to delay */
 module_param_named(default_delay, default_delay, int, 0644);
 
 static u32 force_off_delay = (5 * HZ); /* MS to delay force poweroff */
