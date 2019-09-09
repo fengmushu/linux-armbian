@@ -21,6 +21,7 @@ static bool boot_hdmi = false;
 #if defined(CONFIG_COMMON_CLK)
 static struct clk *hdmi_clk = NULL;
 static struct clk *hdmi_ddc_clk = NULL;
+static struct clk* hdmi_clk_parent = NULL;
 #endif
 static __u32 power_enable_count = 0;
 static __u32 clk_enable_count = 0;
@@ -104,7 +105,6 @@ static int hdmi_io_config(u32 bon)
 #if defined(CONFIG_COMMON_CLK)
 static void hdmi_clk_init(void)
 {
-	struct clk* hdmi_pll = NULL;
 	hdmi_clk = clk_get(NULL, "hdmi");
 	if(IS_ERR(hdmi_clk) || (hdmi_clk == NULL)) {
 		hdmi_clk = NULL;
@@ -120,23 +120,23 @@ static void hdmi_clk_init(void)
 		return;
 	}
 #if defined(CONFIG_ARCH_SUN8IW6)
-	hdmi_pll = clk_get(NULL, "pll_video1");
+	hdmi_clk_parent = clk_get(NULL, "pll_video1");
 #elif defined(CONFIG_ARCH_SUN8IW7)
-	hdmi_pll = clk_get(NULL, "pll_video");
+	hdmi_clk_parent = clk_get(NULL, "pll_video");
 #else
 #endif
-	if(IS_ERR(hdmi_pll) || (hdmi_pll == NULL)) {
-		hdmi_pll = NULL;
+	if(IS_ERR(hdmi_clk_parent) || (hdmi_clk_parent == NULL)) {
+		hdmi_clk_parent = NULL;
 		__wrn("fail get pll clk\n");
 	}
-	if((NULL != hdmi_clk) && (NULL != hdmi_pll)) {
-		if(0 != clk_set_parent(hdmi_clk, hdmi_pll)) {
+	if((NULL != hdmi_clk) && (NULL != hdmi_clk_parent)) {
+		if(0 != clk_set_parent(hdmi_clk, hdmi_clk_parent)) {
 			__wrn("fail to set parent %s for clk %s\n", "pll8", "hdmi");
 		}
 	}
 	clk_enable_count = hdmi_clk->enable_count;
 
-	clk_put(hdmi_pll);
+	clk_put(hdmi_clk_parent);
 }
 
 static void hdmi_clk_exit(void)
@@ -145,8 +145,11 @@ static void hdmi_clk_exit(void)
 		clk_put(hdmi_clk);
 	if(hdmi_ddc_clk)
 		clk_put(hdmi_ddc_clk);
+	if (hdmi_clk_parent)
+		clk_put(hdmi_clk_parent);
 	hdmi_clk = NULL;
 	hdmi_ddc_clk = NULL;
+	hdmi_clk_parent = NULL;
 }
 
 static void hdmi_clk_enable(void)
@@ -165,20 +168,93 @@ static void hdmi_clk_disable(void)
 		clk_disable(hdmi_ddc_clk);
 }
 
+static bool hdmi_is_divide_by(unsigned long dividend,
+			       unsigned long divisor)
+{
+	bool divide = false;
+	unsigned long temp;
+
+	if (divisor == 0)
+		goto exit;
+
+	temp = dividend / divisor;
+	if (dividend == (temp * divisor))
+		divide = true;
+
+exit:
+	return divide;
+}
+
 static void hdmi_clk_config(u32 vic)
 {
 	int index = 0;
+	unsigned long rate = 0, rate_set = 0;
+	unsigned long rate_round, rate_parent;
+	int i;
 
 	index = Hdmi_hal_get_video_info(vic);
-	if(hdmi_clk)
-		clk_set_rate(hdmi_clk, video_timing[index].pixel_clk);
+	rate = video_timing[index].pixel_clk *
+		(video_timing[index].pixel_repeat + 1);
+	rate_parent = clk_get_rate(hdmi_clk_parent);
+	if (!hdmi_is_divide_by(rate_parent, rate)) {
+		if (hdmi_is_divide_by(297000000, rate))
+				clk_set_rate(hdmi_clk_parent, 297000000);
+		else if (hdmi_is_divide_by(594000000, rate))
+				clk_set_rate(hdmi_clk_parent, 594000000);
+	}
+
+	if(hdmi_clk) {
+		clk_set_rate(hdmi_clk, rate);
+		rate_set = clk_get_rate(hdmi_clk);
+	}
+
+	if (hdmi_clk && (rate_set != rate)) {
+		for (i = 1; i < 10; i++) {
+			rate_parent = rate * i;
+			rate_round = clk_round_rate(hdmi_clk_parent, rate_parent);
+			if (rate_round == rate_parent) {
+				clk_set_rate(hdmi_clk_parent, rate_parent);
+				clk_set_rate(hdmi_clk, rate);
+				break;
+			}
+		}
+		if (i == 10)
+			__wrn("clk_set_rate fail.we need %ldhz, but get %ldhz\n",
+				rate, rate_set);
+	}
 }
+
+unsigned int hdmi_clk_get_div(void)
+{
+    unsigned long rate = 1, rate_parent = 1;
+    unsigned int div = 4;
+
+    if (!hdmi_clk || !hdmi_clk_parent) {
+        pr_warn("%s, get clk div fail\n", __func__);
+        goto exit;
+    }
+
+    if (hdmi_clk)
+        rate = clk_get_rate(hdmi_clk);
+    if (hdmi_clk_parent)
+        rate_parent = clk_get_rate(hdmi_clk_parent);
+
+    if (rate != 0)
+        div = rate_parent / rate;
+    else
+        pr_warn("%s, hdmi clk rate is ZERO!\n", __func__);
+
+exit:
+    return div;
+}
+
 #else
 static void hdmi_clk_init(void){}
 static void hdmi_clk_exit(void){}
 static void hdmi_clk_enable(void){}
 static void hdmi_clk_disable(void){}
 static void hdmi_clk_config(u32 vic){}
+unsigned int hdmi_clk_get_div(void) {}
 #endif
 
 #ifdef CONFIG_AW_AXP

@@ -668,6 +668,24 @@ int disp_sys_clk_disable(const char *id)
 	return ret;
 }
 
+unsigned long disp_sys_clk_round_rate(const char *id, unsigned long rate)
+{
+	struct clk* hclk = NULL;
+	unsigned long round_rate;
+
+	hclk = clk_get(NULL, id);
+
+	if(NULL == hclk || IS_ERR(hclk)) {
+		__wrn("Fail to get handle for clock %s.\n", id);
+		return rate;
+	}
+
+	round_rate =  clk_round_rate(hclk, rate);
+	clk_put(hclk);
+
+	return round_rate;
+}
+
 EXPORT_SYMBOL(disp_sys_clk_get_rate);
 EXPORT_SYMBOL(disp_sys_clk_set_parent);
 EXPORT_SYMBOL(disp_sys_clk_enable);

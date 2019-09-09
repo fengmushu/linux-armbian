@@ -78,5 +78,6 @@ unsigned long disp_sys_clk_get_rate(const char *id);
 int disp_sys_clk_set_parent(const char *id, const char *parent);
 int disp_sys_clk_enable(const char *id);
 int disp_sys_clk_disable(const char *id);
+unsigned long disp_sys_clk_round_rate(const char *id, unsigned long rate);
 
 #endif

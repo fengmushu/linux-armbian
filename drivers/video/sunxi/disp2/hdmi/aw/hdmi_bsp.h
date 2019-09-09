@@ -27,6 +27,22 @@ struct video_para
 	unsigned char			is_hdmi;
 	unsigned char			is_yuv;
 	unsigned char			is_hcts;	
+	unsigned int    pixel_clk;
+	unsigned int    clk_div;
+	unsigned int    pixel_repeat;
+	unsigned int    x_res;
+	unsigned int    y_res;
+	unsigned int    hor_total_time;
+	unsigned int    hor_back_porch;
+	unsigned int    hor_front_porch;
+	unsigned int    hor_sync_time;
+	unsigned int    ver_total_time;
+	unsigned int    ver_back_porch;
+	unsigned int    ver_front_porch;
+	unsigned int    ver_sync_time;
+	unsigned int    hor_sync_polarity; /* 0: negative, 1: positive */
+	unsigned int    ver_sync_polarity; /* 0: negative, 1: positive */
+	unsigned int    b_interlace;
 };
 
 enum audio_type
@@ -54,6 +70,7 @@ struct audio_para
 	unsigned int			sample_rate;
 	unsigned int			sample_bit;
 	unsigned int			ch_num;
+	unsigned int 			vic;
 };
 
 #ifdef LINUX_OS

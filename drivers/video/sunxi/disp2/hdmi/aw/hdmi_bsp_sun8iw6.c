@@ -3,7 +3,6 @@
 #include "hdmi_core.h"
 
 static unsigned int hdmi_base_addr;
-static struct video_para glb_video;
 static unsigned int hdmi_version;
 //static struct audio_para glb_audio;
 
@@ -40,6 +39,7 @@ static struct para_tab ptbl[] =
 	{{132		, 2	, 0,  96,		5,	 5, 	5,		1,	 5,	  0,		0,	0,		114,		110,	40,  	160, 	30,		1,		1	}},
 	{{257		, 1	, 0,  96,		15,	10, 	8,		2,	 8,		0,		0,	0,		48,			176,	88, 	112,	90,		1,		1	}},
 	{{258		, 1	, 0,  96,		15,	10, 	8,		5,	 8,		4,		0,	0,		160,		32,		88, 	112,	90,		1,		1	}},
+	{{0			, 0	, 0,   0,		 0,  0, 	0,		0,	 0,		0,		0,	0,		  0,		 0,		 0, 	  0,	 0,		0           }},
 };
 
 static unsigned char ca_table[64]=
@@ -129,12 +129,14 @@ static void hdmi_phy_init(struct video_para *video)
 static unsigned int get_vid(unsigned int id)
 {
 	unsigned int i,count;
-	count = sizeof(ptbl)/sizeof(struct para_tab);
+	count = sizeof(ptbl) / sizeof(struct para_tab) - 1;
 	for(i=0;i<count;i++) {
 		if(id == ptbl[i].para[0])
 			return i;
 	}
-	return -1;
+
+	ptbl[i].para[0] = id;
+	return i;
 }
 
 static int hdmi_phy_set(struct video_para *video)
@@ -357,12 +359,28 @@ void bsp_hdmi_set_video_en(unsigned char enable)
 #endif
 }
 
+int bsp_hdmi_video_get_div(unsigned int pixel_clk)
+{
+	int div = 1;
+
+	if (pixel_clk > 148500000)
+		div = 1;
+	else if (pixel_clk > 74250000)
+		div = 2;
+	else if (pixel_clk > 27000000)
+		div = 4;
+	else
+		div = 11;
+
+	return div;
+}
+
 int bsp_hdmi_video(struct video_para *video)
 {
+	unsigned int count;
 	unsigned int id = get_vid(video->vic);
-	glb_video.vic = video->vic;
 
-	switch(glb_video.vic)
+	switch(video->vic)
 	{
 		case 2:
 		case 6:
@@ -373,6 +391,34 @@ int bsp_hdmi_video(struct video_para *video)
 		default:
 			video->csc = BT709;
 			break;
+	}
+
+	count = sizeof(ptbl) / sizeof(struct para_tab);
+	if (id == count - 1) {
+		ptbl[id].para[1] = bsp_hdmi_video_get_div(video->pixel_clk);
+		ptbl[id].para[2] = video->pixel_repeat;
+		ptbl[id].para[3] = ((video->hor_sync_polarity & 1) << 5)
+							| ((video->ver_sync_polarity  & 1) << 6)
+							| (video->b_interlace & 1);
+		ptbl[id].para[4] = video->x_res / 256;
+		ptbl[id].para[5] = video->ver_sync_time;
+		ptbl[id].para[6] = video->y_res / 256;
+		ptbl[id].para[7] = (video->hor_total_time - video->x_res) / 256;
+		ptbl[id].para[8] = video->ver_front_porch;
+		ptbl[id].para[9] = video->hor_front_porch / 256;
+		ptbl[id].para[10] = video->hor_sync_time / 256;
+		ptbl[id].para[11] = video->x_res % 256;
+		ptbl[id].para[12] = (video->hor_total_time - video->x_res) % 256;
+		ptbl[id].para[13] = video->hor_front_porch % 256;
+		ptbl[id].para[14] = video->hor_sync_time % 256;
+		ptbl[id].para[15] = video->y_res % 256;
+		ptbl[id].para[16] = video->ver_total_time - video->y_res;
+		ptbl[id].para[17] = 1;
+		ptbl[id].para[18] = 1;
+		if (video->x_res <= 736 && video->y_res <= 576)
+			video->csc = BT601;
+		else
+			video->csc = BT709;
 	}
 
 	bsp_hdmi_init();
@@ -490,7 +536,10 @@ int bsp_hdmi_audio(struct audio_para *audio)
 {
 	unsigned int i;
 	unsigned int n;
-	unsigned id = get_vid(glb_video.vic);
+	unsigned int count;
+	unsigned id = get_vid(audio->vic);
+
+	count = sizeof(ptbl) / sizeof(struct para_tab);
 
 	hdmi_write(0xA049, (audio->ch_num > 2) ? 0xf1 : 0xf0);
 
@@ -533,7 +582,7 @@ int bsp_hdmi_audio(struct audio_para *audio)
 	{
 		if(audio->sample_rate == n_table[i])
 		{
-			if(ptbl[id].para[1] == 1)
+			if((id != count - 1) && (ptbl[id].para[1] == 1))
 				n = n_table[i+1];
 			else
 				n = n_table[i+2];

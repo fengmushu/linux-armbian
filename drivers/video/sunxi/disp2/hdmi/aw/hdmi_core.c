@@ -45,8 +45,8 @@ disp_video_timings video_timing[] =
 	{HDMI3840_2160P_30,  0,297000000, 0,  3840,  2160,  4400,  296,  176,  88,  2250,  72,  8, 10,  1,   1,   0,    0,  0},
 	{HDMI3840_2160P_25,  0,297000000, 0,  3840,  2160,  5280,  296, 1056,  88,  2250,  72,  8, 10,  1,   1,   0,    0,  0},
 	{HDMI800_480P,       0,27000000,  0,   800,   480,  1028,   88,   80,  60,   525,  29, 13,  3,  0,   0,   0,    0,  0},
-	{HDMI1024_768P,      0,65000000,  0,  1024,   768,  1344,  160,	  24, 136,   806,  29,  3,  6,  0,   0,   0,    0,  0},
 	{HDMI1280_1024P,     0,108000000, 0,  1280,  1024,  1688,  248,   48, 112,  1066,  38,  1,  3,  1,   1,   0,    0,  0},
+	{HDMI1024_768P,      0,65000000,  0,  1024,   768,  1344,  160,	  24, 136,   806,  29,  3,  6,  0,   0,   0,    0,  0},
 	{HDMI1280_800P,      0,82860544,  0,  1280,  1024,  1688,  248,   48, 112,   832,  28,  1,  3,  1,   1,   0,    0,  0},
 	{HDMI1280_768P,      0,80271152,  0,  1280,   768,  1688,  248,   48, 112,   806,  29,  3,  6,  1,   1,   0,    0,  0},
 	{HDMI1360_768P,      0,85500000,  0,  1360,   768,  1792,  256,   64, 112,   805,  17,  3, 17,  0,   0,   0,    0,  0},
@@ -419,6 +419,7 @@ __s32 set_video_mode(__u32 vic)
 	__u32 ret = 0;
 	mutex_lock(&hdmi_lock);
 	glb_video_para.vic = vic;
+	glb_audio_para.vic = vic;
 	mutex_unlock(&hdmi_lock);
 	return ret;
 }
@@ -484,6 +485,8 @@ __s32 hdmi_core_get_list_num(void)
 __s32 video_config(__u32 vic)
 {
 	int ret = 0;
+	disp_video_timings *info;
+	int i;
 
   isHDMI = GetIsHdmi();
   YCbCr444_Support = GetIsYUV();
@@ -510,6 +513,33 @@ __s32 video_config(__u32 vic)
       glb_video_para.is_hcts = 0;
       __inf("hdmi video + audio\n");
   }
+
+	info = &video_timing[0];
+	for (i = 0; i < ARRAY_SIZE(video_timing); i++) {
+		if (info->vic == vic) {
+			glb_video_para.pixel_clk        = info->pixel_clk        ;
+			glb_video_para.clk_div          = hdmi_clk_get_div()     ;
+			glb_video_para.pixel_repeat     = info->pixel_repeat     ;
+			glb_video_para.x_res            = info->x_res            ;
+			glb_video_para.y_res            = info->y_res            ;
+			glb_video_para.hor_total_time   = info->hor_total_time   ;
+			glb_video_para.hor_back_porch   = info->hor_back_porch   ;
+			glb_video_para.hor_front_porch  = info->hor_front_porch  ;
+			glb_video_para.hor_sync_time    = info->hor_sync_time    ;
+			glb_video_para.ver_total_time   = info->ver_total_time   ;
+			glb_video_para.ver_back_porch   = info->ver_back_porch   ;
+			glb_video_para.ver_front_porch  = info->ver_front_porch  ;
+			glb_video_para.ver_sync_time    = info->ver_sync_time    ;
+			glb_video_para.hor_sync_polarity= info->hor_sync_polarity;
+			glb_video_para.ver_sync_polarity= info->ver_sync_polarity;
+			glb_video_para.b_interlace      = info->b_interlace      ;
+			break;
+		}
+		info++;
+	}
+
+	if (i >= ARRAY_SIZE(video_timing))
+		__wrn("cant found proper video timing for vic %d\n", vic);
 
 	__inf("video_on @ video_config = %d!\n",video_on);
 
