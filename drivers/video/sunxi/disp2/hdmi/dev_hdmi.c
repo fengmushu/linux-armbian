@@ -187,8 +187,10 @@ static struct platform_driver hdmi_driver =
 	},
 };
 
+extern int hdmi_hotplug_one_shot;
 int hdmi_open(struct inode *inode, struct file *file)
 {
+	hdmi_hotplug_one_shot = 0;
 	return 0;
 }
 
@@ -200,7 +202,7 @@ int hdmi_release(struct inode *inode, struct file *file)
 
 ssize_t hdmi_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
-	return -EINVAL;
+	return 0;
 }
 
 ssize_t hdmi_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)

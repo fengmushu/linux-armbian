@@ -141,11 +141,22 @@ static __s32 main_Hpd_Check(void)
 		return 0;
 }
 
+#include <linux/ktime.h>
+
+int hdmi_hotplug_one_shot = 1; //do not auto trigger
 __s32 hdmi_main_task_loop(void)
 {
 	static __u32 times = 0;
+	static s64 uptime_ms;
+
+	uptime_ms = ktime_to_ms(ktime_get_boottime());
 
 	HPD = main_Hpd_Check();
+	if(hdmi_hotplug_one_shot == 0 && HPD) {
+		__inf("trigger oneshot hotplug-in after uptime > 1 min\n");
+		hdmi_hotplug_one_shot = 1;
+		HPD = 0;
+	}
 	if( 0 == HPD )
 	{
 		if((hdmi_state > HDMI_State_Wait_Hpd)  || (hdmi_state == HDMI_State_Idle)) {
@@ -160,7 +171,7 @@ __s32 hdmi_main_task_loop(void)
 			times = 0;
 			__inf("unplug state !!\n");
 		}
-  }
+	}
 
 	switch(hdmi_state) {
 

@@ -682,7 +682,7 @@ static int sunxi_fb_blank(int blank_mode, struct fb_info *info)
 
 static int sunxi_fb_cursor(struct fb_info *info, struct fb_cursor *cursor)
 {
-	__inf("sunxi_fb_cursor\n");
+	// __inf("sunxi_fb_cursor\n");
 
 	return -EINVAL;	/* just to force soft_cursor() call */
 }
@@ -795,10 +795,9 @@ static int sunxi_fb_setcolreg(unsigned regno, unsigned red, unsigned green,
 				convert_bitfield(red, &info->var.red) |
 				convert_bitfield(green, &info->var.green) |
 				convert_bitfield(blue, &info->var.blue);
-			__inf("Fb_setcolreg,regno=%2d,a=%2X,r=%2X,g=%2X,b=%2X, "
-					"result=%08X\n", regno, transp, red, green, blue,
-					val);
-			((u32 *) info->pseudo_palette)[regno] = val;
+				//__inf("Fb_setcolreg,regno=%2d,a=%2X,r=%2X,g=%2X,b=%2X, " \
+					"result=%08X\n", regno, transp, red, green, blue, val);
+				((u32 *) info->pseudo_palette)[regno] = val;
 		} else {
 			ret = 0;
 		}
@@ -817,8 +816,8 @@ static int sunxi_fb_setcmap(struct fb_cmap *cmap, struct fb_info *info)
 	unsigned char hred, hgreen, hblue, htransp = 0xff;
 	unsigned short *red, *green, *blue, *transp;
 
-	__inf("Fb_setcmap, cmap start:%d len:%d, %dbpp\n", cmap->start,
-			cmap->len, info->var.bits_per_pixel);
+	// __inf("Fb_setcmap, cmap start:%d len:%d, %dbpp\n", \
+		cmap->start, cmap->len, info->var.bits_per_pixel);
 
 	red = cmap->red;
 	green = cmap->green;

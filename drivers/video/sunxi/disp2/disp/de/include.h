@@ -106,7 +106,7 @@ s32 bsp_disp_get_print_level(void);
 #endif
 #endif
 
-#define DEFAULT_PRINT_LEVLE 0 //(LOG_TRACE_LINE | LOG_LEVEL_INFO | LOG_LEVEL_ERRO)
+#define DEFAULT_PRINT_LEVLE (LOG_TRACE_LINE | LOG_LEVEL_INFO | LOG_LEVEL_ERRO)
 #if defined(CONFIG_FPGA_V4_PLATFORM) || defined(CONFIG_FPGA_V7_PLATFORM) || defined(CONFIG_A67_FPGA)
 #define __FPGA_DEBUG__
 #endif
