@@ -54,7 +54,7 @@ disp_video_timings video_timing[] =
 	{HDMI1440_900P,      0,106500000, 0,  1440,   900,  1904,  246,  120,  98,   932,  28,  1,  3,  1,   1,   0,    0,  0},
 	{HDMI1680_1050P,     0,147000000, 0,  1680,  1050,  2256,  288,  104, 184,  1087,  33,  1,  3,  1,   1,   0,    0,  0},
 	{HDMI2048_1536P,     0,172040000, 0,  2048,  1536,  2736,  344,  128, 216,  1572,  32,  1,  3,  1,   1,   0,    0,  0},
-	{HDMI1600_900P,      0,119000000, 0,  1600,  900,   2128,  264,  96,  168,   932,  28,  1,  3,  0,   1,   0,    0,  0},
+	{HDMI1600_900P,      0,108000000, 0,  1600,   900,  1800,   96,   24,  80,  1000,  96,  1,  3,  1,   1,   0,    0,  0},
 	{ HDMI_EDID, },
 };
 
@@ -147,9 +147,6 @@ int hdmi_hotplug_one_shot = 1; //do not auto trigger
 __s32 hdmi_main_task_loop(void)
 {
 	static __u32 times = 0;
-	static s64 uptime_ms;
-
-	uptime_ms = ktime_to_ms(ktime_get_boottime());
 
 	HPD = main_Hpd_Check();
 	if(hdmi_hotplug_one_shot == 0 && HPD) {
