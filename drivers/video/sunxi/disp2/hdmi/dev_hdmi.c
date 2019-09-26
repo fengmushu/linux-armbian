@@ -300,9 +300,7 @@ static void __exit hdmi_module_exit(void)
 	cdev_del(my_cdev);
 }
 
-
-
-module_init(hdmi_module_init);
+late_initcall_sync(hdmi_module_init);
 module_exit(hdmi_module_exit);
 
 MODULE_AUTHOR("tyle");
