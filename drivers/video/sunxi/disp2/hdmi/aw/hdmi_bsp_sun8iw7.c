@@ -376,7 +376,8 @@ int bsp_hdmi_video(struct video_para *video)
 	}
 
 	count = sizeof(ptbl) / sizeof(struct para_tab);
-	// if (id == count - 1) 
+	if (id == count - 1 ||
+		id != HDMI1600_900P ) /* 1600 * 900 can't fixup */
 	{
 		ptbl[id].para[1] = bsp_hdmi_video_get_div(video->pixel_clk);
 		ptbl[id].para[2] = video->pixel_repeat;
