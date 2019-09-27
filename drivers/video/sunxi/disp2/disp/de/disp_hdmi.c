@@ -397,7 +397,7 @@ s32 disp_hdmi_set_mode(struct disp_device* hdmi, u32 mode)
 	s32 ret = 0;
 	struct disp_device_private_data *hdmip = disp_hdmi_get_priv(hdmi);
 	if((NULL == hdmi) || (NULL == hdmip)) {
-		DE_WRN("hdmi set func null  hdl!\n");
+		DE_WRN("disp_hdmi_set_mode set func null  hdl!\n");
 		return DIS_FAIL;
 	}
 
@@ -408,8 +408,10 @@ s32 disp_hdmi_set_mode(struct disp_device* hdmi, u32 mode)
 
 	ret = hdmip->hdmi_func.hdmi_set_mode((disp_tv_mode)mode);
 
-	if(ret == 0)
+	if(ret == 0) {
+		DE_WRN("disp_hdmi_set_mode return %d\n", ret);
 		hdmip->mode = mode;
+	}
 
 	return ret;
 }
@@ -479,8 +481,10 @@ static s32 disp_hdmi_check_support_mode(struct disp_device* hdmi, u32 mode)
 		return DIS_FAIL;
 	}
 
-	if(hdmip->hdmi_func.hdmi_mode_support == NULL)
+	if(hdmip->hdmi_func.hdmi_mode_support == NULL) {
+		DE_WRN("hdmi_mode_support func null!\n");
 		return -1;
+	}
 
 	return hdmip->hdmi_func.hdmi_mode_support(mode);
 }
@@ -521,8 +525,10 @@ static s32 disp_hdmi_get_edid(struct disp_device* hdmi)
 		return DIS_FAIL;
 	}
 
-	if(hdmip->hdmi_func.hdmi_get_edid == NULL)
+	if(hdmip->hdmi_func.hdmi_get_edid == NULL) {
+		DE_WRN("disp_hdmi_get_edid func null!\n");
 		return 0;
+	}
 
 	return hdmip->hdmi_func.hdmi_get_edid();
 }
@@ -614,7 +620,7 @@ s32 disp_init_hdmi(disp_bsp_init_para * para)
 			hdmi->disp = disp;
 			sprintf(hdmi->name, "hdmi%d", disp);
 			hdmi->type = DISP_OUTPUT_TYPE_HDMI;
-			hdmip->mode = DISP_TV_MOD_720P_50HZ;
+			hdmip->mode = DISP_TV_MOD_720P_60HZ;
 			hdmip->irq_no = para->irq_no[DISP_MOD_LCD0 + disp];
 			switch(disp) {
 			case 0:

@@ -101,9 +101,9 @@ static struct resource disp_resource[] =
 static ssize_t disp_sys_show(struct device *dev,
     struct device_attribute *attr, char *buf)
 {
+  	ssize_t count = 0;
 	struct disp_manager *mgr = NULL;
 	struct disp_device *dispdev = NULL;
-  ssize_t count = 0;
 	int num_screens, screen_id;
 	int num_layers, layer_id;
 	int num_chans, chan_id;
@@ -171,7 +171,29 @@ static ssize_t disp_sys_store(struct device *dev,
         struct device_attribute *attr,
         const char *buf, size_t count)
 {
-  return count;
+	struct disp_manager *mgr = NULL;
+	struct disp_device *dispdev = NULL;
+	int num_screens, screen_id;
+
+	num_screens = bsp_disp_feat_get_num_screens();
+	for(screen_id=0; screen_id < num_screens; screen_id ++) {
+		int mode = 0;
+
+		mgr = disp_get_layer_manager(screen_id);
+		if(NULL == mgr)
+			continue;
+
+		dispdev = mgr->device;
+		if(NULL == dispdev)
+			continue;
+
+		if(!dispdev->is_enabled(dispdev))
+			continue;
+
+		mode = simple_strtoul(buf, NULL, 0);
+		dispdev->set_mode(dispdev, mode);
+	}
+	return count;
 }
 
 static DEVICE_ATTR(sys, S_IRUGO|S_IWUSR|S_IWGRP,
@@ -375,186 +397,98 @@ static unsigned int disp_boot_init_disp_parse(void)
 
 static s32 parser_disp_init_para(disp_init_para * init_para)
 {
-	int  value;
-	int  i;
+	int  value, screen;
 
 	memset(init_para, 0, sizeof(disp_init_para));
 
 	if(disp_sys_script_get_item("disp_init", "disp_init_enable", &value, 1) < 0) {
-		__wrn("fetch script data disp_init.disp_init_enable fail\n");
+		pr_err("fetch script data disp_init.disp_init_enable fail\n");
 		return -1;
 	}
 	init_para->b_init = value;
 
 	if(disp_sys_script_get_item("disp_init", "disp_mode", &value, 1) < 0)	{
-		__wrn("fetch script data disp_init.disp_mode fail\n");
+		pr_err("fetch script data disp_init.disp_mode fail\n");
 		return -1;
 	}
 	init_para->disp_mode= value;
 
 	//screen0
-	if(disp_sys_script_get_item("disp_init", "screen0_output_type", &value, 1) < 0)	{
-		__wrn("fetch script data disp_init.screen0_output_type fail\n");
-		return -1;
-	}
-	if(value == 0) {
-		init_para->output_type[0] = DISP_OUTPUT_TYPE_NONE;
-	}	else if(value == 1) {
-		init_para->output_type[0] = DISP_OUTPUT_TYPE_LCD;
-	}	else if(value == 2)	{
-		init_para->output_type[0] = DISP_OUTPUT_TYPE_TV;
-	}	else if(value == 3)	{
-		init_para->output_type[0] = DISP_OUTPUT_TYPE_HDMI;
-	}	else if(value == 4)	{
-		init_para->output_type[0] = DISP_OUTPUT_TYPE_VGA;
-	}	else {
-		__wrn("invalid screen0_output_type %d\n", init_para->output_type[0]);
-		return -1;
+	for(screen = 0; screen < 3; screen ++) {
+		char buff[96];
+
+		snprintf(buff, sizeof(buff), "screen%d_output_type", screen);
+		if(disp_sys_script_get_item("disp_init", buff, &value, 1) < 0)	{
+			pr_err("fetch script data disp_init.%s fail\n", buff);
+			return -1;
+		}
+		if(value == 0) {
+			init_para->output_type[screen] = DISP_OUTPUT_TYPE_NONE;
+		}	else if(value == 1) {
+			init_para->output_type[screen] = DISP_OUTPUT_TYPE_LCD;
+		}	else if(value == 2)	{
+			init_para->output_type[screen] = DISP_OUTPUT_TYPE_TV;
+		}	else if(value == 3)	{
+			init_para->output_type[screen] = DISP_OUTPUT_TYPE_HDMI;
+		}	else if(value == 4)	{
+			init_para->output_type[screen] = DISP_OUTPUT_TYPE_VGA;
+		}	else {
+			pr_err("invalid %s %d\n", buff, init_para->output_type[screen]);
+			return -1;
+		}
+
+		snprintf(buff, sizeof(buff), "screen%d_output_mode", screen);
+		if(disp_sys_script_get_item("disp_init", buff, &value, 1) < 0)	{
+			pr_err("fetch script data disp_init.%s fail\n", buff);
+			return -1;
+		}
+		if( (init_para->output_type[screen] == DISP_OUTPUT_TYPE_TV) || 
+			(init_para->output_type[screen] == DISP_OUTPUT_TYPE_HDMI) || 
+			(init_para->output_type[screen] == DISP_OUTPUT_TYPE_VGA) )
+		{
+			pr_err("fetch[%s] script output_type: %d, output_mode: %d\n", \
+					buff, init_para->output_type[screen], value);
+			init_para->output_mode[screen]= value;
+		}
+
+		//fb0
+		init_para->buffer_num[screen]= 2;
+		snprintf(buff, sizeof(buff), "fb%s_format", screen);
+		if(disp_sys_script_get_item("disp_init", buff, &value, 1) < 0) {
+			pr_err("fetch script data disp_init.%s fail\n", buff);
+			return -1;
+		}
+		init_para->format[screen]= value;
+
+		snprintf(buff, sizeof(buff), "fb%d_width", screen);
+		if(disp_sys_script_get_item("disp_init", buff, &value, 1) < 0)	{
+			pr_err("fetch script data disp_init.%s fail\n", buff);
+			return -1;
+		}
+		init_para->fb_width[screen]= value;
+
+		snprintf(buff, sizeof(buff), "fb%d_height", screen);
+		if(disp_sys_script_get_item("disp_init", buff, &value, 1) < 0)	{
+			pr_err("fetch script data disp_init.%s fail\n", buff);
+			return -1;
+		}
+		init_para->fb_height[screen]= value;
 	}
 
-	if(disp_sys_script_get_item("disp_init", "screen0_output_mode", &value, 1) < 0)	{
-		__wrn("fetch script data disp_init.screen0_output_mode fail\n");
-		return -1;
+	pr_info("====display init para begin====\n");
+	pr_info("b_init:%d\n", init_para->b_init);
+	pr_info("disp_mode:%d\n\n", init_para->disp_mode);
+	for(screen=0; screen<3; screen++) {
+		pr_info("output_type[%d]:%d\n", screen, init_para->output_type[screen]);
+		pr_info("output_mode[%d]:%d\n", screen, init_para->output_mode[screen]);
 	}
-	if(init_para->output_type[0] == DISP_OUTPUT_TYPE_TV || init_para->output_type[0] == DISP_OUTPUT_TYPE_HDMI
-	    || init_para->output_type[0] == DISP_OUTPUT_TYPE_VGA) {
-		init_para->output_mode[0]= value;
+	for(screen=0; screen<3; screen++) {
+		pr_info("buffer_num[%d]:%d\n", screen, init_para->buffer_num[screen]);
+		pr_info("format[%d]:%d\n", screen, init_para->format[screen]);
+		pr_info("fb_width[%d]:%d\n", screen, init_para->fb_width[screen]);
+		pr_info("fb_height[%d]:%d\n", screen, init_para->fb_height[screen]);
 	}
-
-	//screen1
-	if(disp_sys_script_get_item("disp_init", "screen1_output_type", &value, 1) < 0)	{
-		__wrn("fetch script data disp_init.screen1_output_type fail\n");
-		return -1;
-	}
-	if(value == 0) {
-		init_para->output_type[1] = DISP_OUTPUT_TYPE_NONE;
-	}	else if(value == 1)	{
-		init_para->output_type[1] = DISP_OUTPUT_TYPE_LCD;
-	}	else if(value == 2)	{
-		init_para->output_type[1] = DISP_OUTPUT_TYPE_TV;
-	}	else if(value == 3)	{
-		init_para->output_type[1] = DISP_OUTPUT_TYPE_HDMI;
-	}	else if(value == 4)	{
-		init_para->output_type[1] = DISP_OUTPUT_TYPE_VGA;
-	}	else {
-		__wrn("invalid screen1_output_type %d\n", init_para->output_type[1]);
-		return -1;
-	}
-
-	if(disp_sys_script_get_item("disp_init", "screen1_output_mode", &value, 1) < 0)	{
-		__wrn("fetch script data disp_init.screen1_output_mode fail\n");
-		return -1;
-	}
-	if(init_para->output_type[1] == DISP_OUTPUT_TYPE_TV || init_para->output_type[1] == DISP_OUTPUT_TYPE_HDMI
-	    || init_para->output_type[1] == DISP_OUTPUT_TYPE_VGA) {
-		init_para->output_mode[1]= value;
-	}
-
-#if defined(CONFIG_HOMLET_PLATFORM)
-	value = disp_boot_init_disp_parse(); // only support channel 0 and 1
-	if((value & 0xFF00) == (init_para->output_type[0] << 8))
-		init_para->output_mode[0] = value & 0xFF;
-	if((value & 0xFF000000) == (init_para->output_type[1] << 24))
-		init_para->output_mode[1] = (value >> 16) & 0xFF;
-#endif // #if defined(CONFIG_HOMLET_PLATFORM)
-
-	//screen2
-	if(disp_sys_script_get_item("disp_init", "screen2_output_type", &value, 1) < 0)	{
-		__inf("fetch script data disp_init.screen2_output_type fail\n");
-	}
-	if(value == 0) {
-		init_para->output_type[2] = DISP_OUTPUT_TYPE_NONE;
-	}	else if(value == 1) {
-		init_para->output_type[2] = DISP_OUTPUT_TYPE_LCD;
-	}	else if(value == 2)	{
-		init_para->output_type[2] = DISP_OUTPUT_TYPE_TV;
-	}	else if(value == 3)	{
-		init_para->output_type[2] = DISP_OUTPUT_TYPE_HDMI;
-	}	else if(value == 4)	{
-		init_para->output_type[2] = DISP_OUTPUT_TYPE_VGA;
-	}	else {
-		__inf("invalid screen0_output_type %d\n", init_para->output_type[2]);
-	}
-
-	if(disp_sys_script_get_item("disp_init", "screen2_output_mode", &value, 1) < 0)	{
-		__inf("fetch script data disp_init.screen2_output_mode fail\n");
-	}
-	if(init_para->output_type[2] == DISP_OUTPUT_TYPE_TV || init_para->output_type[2] == DISP_OUTPUT_TYPE_HDMI
-	    || init_para->output_type[2] == DISP_OUTPUT_TYPE_VGA) {
-		init_para->output_mode[2]= value;
-	}
-
-	//fb0
-	init_para->buffer_num[0]= 2;
-
-	if(disp_sys_script_get_item("disp_init", "fb0_format", &value, 1) < 0) {
-		__wrn("fetch script data disp_init.fb0_format fail\n");
-		return -1;
-	}
-	init_para->format[0]= value;
-
-	if(disp_sys_script_get_item("disp_init", "fb0_width", &value, 1) < 0)	{
-		__inf("fetch script data disp_init.fb0_width fail\n");
-		return -1;
-	}
-	init_para->fb_width[0]= value;
-
-	if(disp_sys_script_get_item("disp_init", "fb0_height", &value, 1) < 0)	{
-		__inf("fetch script data disp_init.fb0_height fail\n");
-		return -1;
-	}
-	init_para->fb_height[0]= value;
-
-	//fb1
-	init_para->buffer_num[1]= 2;
-
-	if(disp_sys_script_get_item("disp_init", "fb1_format", &value, 1) < 0) {
-		__wrn("fetch script data disp_init.fb1_format fail\n");
-	}
-	init_para->format[1]= value;
-
-	if(disp_sys_script_get_item("disp_init", "fb1_width", &value, 1) < 0) {
-		__inf("fetch script data disp_init.fb1_width fail\n");
-	}
-	init_para->fb_width[1]= value;
-
-	if(disp_sys_script_get_item("disp_init", "fb1_height", &value, 1) < 0) {
-		__inf("fetch script data disp_init.fb1_height fail\n");
-	}
-	init_para->fb_height[1]= value;
-
-	//fb2
-	init_para->buffer_num[2]= 2;
-
-	if(disp_sys_script_get_item("disp_init", "fb2_format", &value, 1) < 0) {
-		__inf("fetch script data disp_init.fb2_format fail\n");
-	}
-	init_para->format[2]= value;
-
-	if(disp_sys_script_get_item("disp_init", "fb2_width", &value, 1) < 0) {
-		__inf("fetch script data disp_init.fb2_width fail\n");
-	}
-	init_para->fb_width[2]= value;
-
-	if(disp_sys_script_get_item("disp_init", "fb2_height", &value, 1) < 0) {
-		__inf("fetch script data disp_init.fb2_height fail\n");
-	}
-	init_para->fb_height[2]= value;
-
-	__inf("====display init para begin====\n");
-	__inf("b_init:%d\n", init_para->b_init);
-	__inf("disp_mode:%d\n\n", init_para->disp_mode);
-	for(i=0; i<3; i++) {
-		__inf("output_type[%d]:%d\n", i, init_para->output_type[i]);
-		__inf("output_mode[%d]:%d\n", i, init_para->output_mode[i]);
-	}
-	for(i=0; i<3; i++) {
-		__inf("buffer_num[%d]:%d\n", i, init_para->buffer_num[i]);
-		__inf("format[%d]:%d\n", i, init_para->format[i]);
-		__inf("fb_width[%d]:%d\n", i, init_para->fb_width[i]);
-		__inf("fb_height[%d]:%d\n", i, init_para->fb_height[i]);
-	}
-	__inf("====display init para end====\n");
+	pr_info("====display init para end====\n");
 
 	return 0;
 }
@@ -683,8 +617,8 @@ static void start_work(struct work_struct *work)
 			int lcd_registered = bsp_disp_get_lcd_registered(screen_id);
 			int hdmi_registered = bsp_disp_get_hdmi_registered();
 
-			__inf("sel=%d, output_type=%d, lcd_reg=%d, hdmi_reg=%d\n",
-				screen_id, output_type, lcd_registered, hdmi_registered);
+			__wrn("screen=%d, output_type=%d:%d, lcd_reg=%d, hdmi_reg=%d\n",
+				screen_id, output_type, output_mode, lcd_registered, hdmi_registered);
 			if(((disp_mode	== DISP_INIT_MODE_SCREEN0) && (screen_id == 0))
 				|| ((disp_mode	== DISP_INIT_MODE_SCREEN1) && (screen_id == 1))) {
 				if((output_type == DISP_OUTPUT_TYPE_LCD)) {
@@ -908,7 +842,7 @@ static s32 disp_init(struct platform_device *pdev)
 	int i, disp, num_screens;
 	unsigned int value, output_type, output_mode;
 
-	__inf("%s !\n", __func__);
+	pr_info("%s --->\n", __func__);
 
 	INIT_WORK(&g_disp_drv.resume_work[0], resume_work_0);
 	INIT_WORK(&g_disp_drv.resume_work[1], resume_work_1);
@@ -975,7 +909,7 @@ static s32 disp_init(struct platform_device *pdev)
 	start_process();
 
 
-	__inf("%s finish\n", __func__);
+	pr_info("%s <---\n", __func__);
 	return 0;
 }
 
@@ -1125,7 +1059,7 @@ static int __devinit disp_probe(struct platform_device *pdev)
 	int i;
 	struct resource	*res;
 
-	__inf("[DISP]disp_probe\n");
+	pr_info("disp_probe --->>>\n");
 	memset(&g_disp_drv, 0, sizeof(disp_drv_info));
 
 	//FIXME, set manager to data
@@ -1160,7 +1094,7 @@ static int __devinit disp_probe(struct platform_device *pdev)
 	pm_runtime_use_autosuspend(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);
 #endif
-	__inf("[DISP]disp_probe finish\n");
+	pr_info("disp_probe <<<---\n");
 
 	return 0;
 }

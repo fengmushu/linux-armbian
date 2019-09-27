@@ -295,6 +295,8 @@ s32 bsp_disp_sync_with_hw(disp_bsp_init_para * para)
 		int ret = -1;
 		struct disp_manager *mgr = NULL;
 
+		pr_info("%s: boot_info disp mode: %d\n", __func__, mode);
+
 		mgr = disp_get_layer_manager(disp);
 		if(!mgr)
 			return -1;
@@ -318,8 +320,10 @@ s32 bsp_disp_sync_with_hw(disp_bsp_init_para * para)
 			return -1;
 		}
 		if(mgr->device && mgr->device->sw_enable) {
-			if(mgr->device->set_mode)
+			if(mgr->device->set_mode) {
+				DE_WRN("set disp mode: %d\n", mode);
 				mgr->device->set_mode(mgr->device, mode);
+			}
 			return mgr->device->sw_enable(mgr->device);
 		}
 	}

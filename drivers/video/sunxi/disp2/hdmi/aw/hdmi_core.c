@@ -143,30 +143,39 @@ static __s32 main_Hpd_Check(void)
 
 #include <linux/ktime.h>
 
-int hdmi_hotplug_one_shot = 1; //do not auto trigger
+extern __u16 edid_id;
+int hdmi_hotplug_one_shot = 0; //do not auto trigger
+
 __s32 hdmi_main_task_loop(void)
 {
-	static __u32 times = 0;
+	static int counter = 0;
 
 	HPD = main_Hpd_Check();
-	if(hdmi_hotplug_one_shot == 0 && HPD) {
-		__inf("trigger oneshot hotplug-in after uptime > 1 min\n");
-		hdmi_hotplug_one_shot = 1;
-		HPD = 0;
+	if( (hdmi_hotplug_one_shot == 0 && HPD) || 
+		(edid_id == 0xbd1b) || 
+		(edid_id == 0xdead) ) 
+	{
+	    s64  uptime;
+    	uptime = ktime_to_ms(ktime_get_boottime());
+		if ( (hdmi_hotplug_one_shot == 0) || 
+				(uptime > 45000 && uptime < 120000) ) {
+			__inf("%lld: trigger oneshot hotplug-in waiting: %04x ...\n", uptime, edid_id);
+			hdmi_hotplug_one_shot = 1;
+			HPD = 0;
+		}
 	}
 	if( 0 == HPD )
 	{
 		if((hdmi_state > HDMI_State_Wait_Hpd)  || (hdmi_state == HDMI_State_Idle)) {
-			__inf("plugout\n");
+			__inf("plugout event\n");
 			hdmi_state = HDMI_State_Idle;
 			video_on = 0;
 			audio_on = 0;
 			Hdmi_hpd_event();
 		}
-
-		if((times++) >= 10) {
-			times = 0;
-			__inf("unplug state !!\n");
+		if(counter++ >= 10) {
+			__inf("plugout state\n");
+			counter = 0;
 		}
 	}
 
@@ -180,7 +189,7 @@ __s32 hdmi_main_task_loop(void)
 			hdmi_state = HDMI_State_Wait_Hpd;
 		case HDMI_State_Wait_Hpd:
 			// __inf("HDMI_State_Wait_Hpd\n");
-			//bsp_hdmi_init();
+			bsp_hdmi_init();
 			if(HPD) {
 				hdmi_state = HDMI_State_EDID_Parse;
 				__inf("plugin\n");
@@ -436,22 +445,25 @@ __s32 set_video_enable(bool enable)
 {
 	int ret = 0;
 	mutex_lock(&hdmi_lock);
-	__inf("set_video_enable = %x!\n",enable);
-	__inf("video_on @ set_video_enable = %d!\n",video_on);
+	__inf("video_on @ curr_state: %d\n", video_on);
 	if((hdmi_state == HDMI_State_HPD_Done) && enable && (0 == video_on))
 	{
 		video_config(glb_video_para.vic);
-		__inf("set_video_enable, vic:%d,is_hdmi:%d,is_yuv:%d,is_hcts:%d\n",
-			glb_video_para.vic, glb_video_para.is_hdmi,glb_video_para.is_yuv, glb_video_para.is_hcts);
+		__inf("set enable: %d, vic:%d, is_hdmi:%d, is_yuv:%d, is_hcts:%d\n",
+			enable, 
+			glb_video_para.vic, 
+			glb_video_para.is_hdmi,
+			glb_video_para.is_yuv, 
+			glb_video_para.is_hcts);
 		if(bsp_hdmi_video(&glb_video_para))
-	  {
-	  	__wrn("set hdmi video error!\n");
-	  	ret = -1;
-	  	goto video_en_end;
-	  }
+	  	{
+	  		__wrn("set hdmi video error!\n");
+	  		ret = -1;
+	  		goto video_en_end;
+	  	}
 
-	  bsp_hdmi_set_video_en(enable);
-	  video_on = 1;
+	  	bsp_hdmi_set_video_en(enable);
+	  	video_on = 1;
 
 		if(((glb_audio_para.type != 1) && (true == audio_enable)) ||
 			((glb_audio_para.type == 1) && (audio_cfged == true)) ) {

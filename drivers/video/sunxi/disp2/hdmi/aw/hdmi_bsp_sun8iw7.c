@@ -653,7 +653,7 @@ int bsp_hdmi_ddc_read(char cmd,char pointer,char offset,int nbyte,char * pbuf)
 		hdmi_write(0x0EE2, 0x02);
 
 		while(1)
-	  {
+	    {
 			to_cnt--;	//wait for 10ms for timeout
 			if(to_cnt == 0)
 			{

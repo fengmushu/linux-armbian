@@ -19,9 +19,9 @@ __s32 Hdmi_hal_video_enable(bool enable)
 
 __s32 Hdmi_hal_set_display_mode(__u32 hdmi_mode)
 {
-	__inf("Hdmi_hal_set_display_mode = %x\n",hdmi_mode);
+	__inf("Hdmi_hal_set_display_mode HAL = %d\n", hdmi_mode);
 	if(hdmi_mode != get_video_mode()) {
-		set_video_mode(hdmi_mode);
+		return set_video_mode(hdmi_mode);
 	}
 	return 0;
 }

@@ -10,7 +10,7 @@
 #define Explicit_Offset_Address_E_DDC_Read  6
 #define Implicit_Offset_Address_E_DDC_Read  7
 
-//extern __u8	EDID_Buf[1024];
+// extern __u8	EDID_Buf[1024];
 extern __u8	Device_Support_VIC[512];
 extern __s32 ParseEDID(void);
 //extern __s32 DDC_Read(char cmd,char pointer,char offset,int nbyte,char * pbuf);

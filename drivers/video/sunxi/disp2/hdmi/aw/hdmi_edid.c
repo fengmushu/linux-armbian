@@ -1,11 +1,13 @@
 #include "hdmi_core.h"
 
+__s32 is_exp = 0;
+__u32 rgb_only = 0;
+__u16 edid_id = 0xdead;
+__u8 Device_Support_VIC[512];
+
 static __s32 is_hdmi;
 static __s32 is_yuv;
-__s32 is_exp = 0;
-__u32		rgb_only = 0;
-__u8		EDID_Buf[HDMI_EDID_LEN];
-__u8 		Device_Support_VIC[512];
+static __u8	EDID_Buf[HDMI_EDID_LEN];
 
 static __u8 EDID_Default[HDMI_EDID_LEN] = 
 #if 0
@@ -44,8 +46,12 @@ static __u8 exp1[16] =
 
 static void DDC_Init(void)
 {
+	#if 1
 	printk("@@-ken-@@: DDC_Init set default edid\n");
 	memcpy(EDID_Buf, EDID_Default, sizeof(EDID_Default));
+	#else
+	memset(EDID_Buf, 0, sizeof(EDID_Buf));
+	#endif
 }
 
 /*
@@ -394,7 +400,8 @@ static __s32 Check_EDID(__u8 *buf_src, __u8*buf_dst)
 	return 0;
 }
 
-extern void edid_print_info(void*);
+#include <linux/edid.h>
+
 __s32 ParseEDID(void)
 {
 	//collect the EDID ucdata of segment 0
@@ -404,7 +411,6 @@ __s32 ParseEDID(void)
 	__inf("\n **** Parse-EDID ****\n");
 
 	memset(Device_Support_VIC,0,sizeof(Device_Support_VIC));
-	memset(EDID_Buf,0,sizeof(EDID_Buf));
 	is_hdmi = 0;
 	is_yuv = 0;
 	is_exp = 0;
@@ -502,6 +508,12 @@ __s32 ParseEDID(void)
 
 	printk("\n********************* DUMP EDID *******************\n");
 	edid_print_info((void*)EDID_Buf);
+	if (!edid_check_info((void*)EDID_Buf)) {
+		struct edid1_info * info = (void*)EDID_Buf;
+		edid_id = EDID1_INFO_PRODUCT_CODE(*info);
+	} else {
+		printk("Error: dump edid checksum error.\n");
+	}
 	printk("\n***************************************************\n");
 	return 0 ;
 
@@ -510,7 +522,6 @@ __err:
 	printk("\n********************* DUMP Default EDID *******************\n");
 	edid_print_info((void*)EDID_Buf);
 	printk("\n***************************************************\n");
-	WARN_ON(1);
 	return 0;
 }
 
