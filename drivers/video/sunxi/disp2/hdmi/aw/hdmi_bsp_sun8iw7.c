@@ -376,9 +376,10 @@ int bsp_hdmi_video(struct video_para *video)
 	}
 
 	count = sizeof(ptbl) / sizeof(struct para_tab);
-	if (id == count - 1 ||
-		id != HDMI1600_900P ) /* 1600 * 900 can't fixup */
+	if ( (id == count - 1) ||
+		 (video->vic == HDMI1600_900P) ) /* 1600 * 900 can't fixup */
 	{
+		pr_info("%s: not found in ptbl OR -1600*900- use original\n", __func__);
 		ptbl[id].para[1] = bsp_hdmi_video_get_div(video->pixel_clk);
 		ptbl[id].para[2] = video->pixel_repeat;
 		ptbl[id].para[3] = ((video->hor_sync_polarity & 1) << 5)
