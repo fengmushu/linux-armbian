@@ -151,19 +151,22 @@ __s32 hdmi_main_task_loop(void)
 	static int counter = 0;
 
 	HPD = main_Hpd_Check();
-	if( (hdmi_hotplug_one_shot == 0 && HPD) || 
-		(edid_id == 0xbd1b) || 
-		(edid_id == 0xdead) ) 
-	{
-	    s64  uptime;
-    	uptime = ktime_to_ms(ktime_get_boottime());
-		if ( (hdmi_hotplug_one_shot == 0) || 
-				(uptime > 45000 && uptime < 120000) ) {
-			__inf("%lld: trigger oneshot hotplug-in waiting: %04x ...\n", uptime, edid_id);
-			hdmi_hotplug_one_shot = 1;
-			HPD = 0;
-		}
-	}
+
+	/* @ken: DO NOT auto trigger HPD */
+	// if( (hdmi_hotplug_one_shot == 0 && HPD) || 
+	// 	(edid_id == 0xbd1b) || 
+	// 	(edid_id == 0xdead) ) 
+	// {
+	//     s64  uptime;
+    // 	uptime = ktime_to_ms(ktime_get_boottime());
+	// 	if ( (hdmi_hotplug_one_shot == 0) || 
+	// 			(uptime > 45000 && uptime < 120000) ) {
+	// 		__inf("%lld: trigger oneshot hotplug-in waiting: %04x ...\n", uptime, edid_id);
+	// 		hdmi_hotplug_one_shot = 1;
+	// 		HPD = 0;
+	// 	}
+	// }
+
 	if( 0 == HPD )
 	{
 		if((hdmi_state > HDMI_State_Wait_Hpd)  || (hdmi_state == HDMI_State_Idle)) {
