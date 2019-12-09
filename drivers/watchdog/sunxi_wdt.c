@@ -321,6 +321,14 @@ static int watchdog_probe_init(void)
 		return temp;
 
 	g_timeout = temp;
+
+	/* enable irq */
+	wdt_irq_en(true);
+
+	/* enable watchdog */
+	wdt_enable(true);
+
+	pr_info("watchdog enabled as init\n");
 	return 0;
 }
 
