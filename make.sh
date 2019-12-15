@@ -10,6 +10,7 @@ build_modules()
 
     # Prepare
     mkdir -p fakeroot/lib/modules
+    mkdir -p fakeroot/boot
 
     # Build and install modules
     INSTALL_MOD_PATH=`pwd`/fakeroot make modules_install || exit -1
