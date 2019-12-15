@@ -1965,12 +1965,19 @@ static int __init disp_module_init(void)
 	}
 
 	display_dev = device_create(disp_class, NULL, devid, NULL, "disp");
+	if(IS_ERR(display_dev)) {
+		__wrn("disp device create failed.\n");
+		return -1;
+	}
 
 	ret = platform_device_register(&disp_device);
-
 	if (ret == 0) {
 		ret = platform_driver_register(&disp_driver);
+	} else {
+		__wrn("devcie disp register failed.\n");
+		return -1;
 	}
+
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	register_early_suspend(&backlight_early_suspend_handler);
 #endif
@@ -1984,7 +1991,6 @@ static int __init disp_module_init(void)
 #endif
 
 	pr_info("[DISP]%s finish\n", __func__);
-
 	return ret;
 }
 
