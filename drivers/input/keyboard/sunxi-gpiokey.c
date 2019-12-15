@@ -16,7 +16,6 @@
 
 static volatile u32 key_val;
 static struct gpio_config	power_key_io, power_key_ctl;
-static struct mutex		gk_mutex;
 static struct input_dev *sunxigk_dev;
 static int suspend_flg = 0, powerkey_is_down = 0;
 static unsigned long poweroff_delay = 0;
@@ -103,7 +102,6 @@ module_param_cb(poweroff, &param_ops, &poweroff_now, 0664);
 static irqreturn_t sunxi_isr_gk(int irq, void *dummy)
 {
 	dprintk(DEBUG_INT, "sunxi gpio key int \n");
-	mutex_lock(&gk_mutex);
 	if(__gpio_get_value(power_key_io.gpio)){
 		if (suspend_flg) {
 			input_report_key(sunxigk_dev, KEY_POWER, 1);
@@ -128,16 +126,13 @@ static irqreturn_t sunxi_isr_gk(int irq, void *dummy)
 			powerkey_is_down = jiffies;
 		}
 	}
-	mutex_unlock(&gk_mutex);
 	return IRQ_HANDLED;
 }
 
 static int sunxi_keyboard_suspend(struct device *dev)
 {
 	dprintk(DEBUG_SUSPEND, "sunxi gpio key suspend \n");
-	mutex_lock(&gk_mutex);
 	suspend_flg = 1;
-	mutex_unlock(&gk_mutex);
 	return 0;
 }
 static int sunxi_keyboard_resume(struct device *dev)
@@ -227,7 +222,6 @@ static int __init sunxigk_init(void)
 	sunxigk_dev->evbit[0] = BIT_MASK(EV_KEY);
 #endif
 	set_bit(KEY_POWER, sunxigk_dev->keybit);
-	mutex_init(&gk_mutex);
 
 	irq_number = gpio_to_irq(power_key_io.gpio);
 
