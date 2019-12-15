@@ -322,13 +322,16 @@ static int watchdog_probe_init(void)
 
 	g_timeout = temp;
 
-	/* enable irq */
-	wdt_irq_en(true);
+	/* too many printk message delay boot-up time */
+	if(console_loglevel <= 4) {
+		/* enable irq */
+		wdt_irq_en(true);
 
-	/* enable watchdog */
-	wdt_enable(true);
+		/* enable watchdog */
+		wdt_enable(true);
 
-	pr_info("watchdog enabled as init\n");
+		pr_info("watchdog enabled as init\n");
+	}
 	return 0;
 }
 
