@@ -174,6 +174,7 @@ early_printk("%s: ion chipid  [0x%x!\n", __func__, chipid);
 			return 1;
 		case 0x00:      /* H3 */
 		case 0x81:
+		case 0x58:	/* H3D */
 			return 0;
 		default:	/* H3 */
 			return 0;
