@@ -63,6 +63,7 @@ extern unsigned int sunxi_get_soc_bin(void);
 extern int sunxi_soc_is_secure(void);
 extern int sunxi_boot_is_secure(void);
 extern unsigned int  sunxi_get_board_vendor_id(void);
+extern int  sunxi_get_rootpk(u8 * rootpk);
 
 /* sunxi platform init functions */
 void __init sunxi_soc_ver_init(void);

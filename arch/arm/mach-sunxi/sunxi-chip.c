@@ -36,6 +36,7 @@ static unsigned int sunxi_soc_ver;
 static unsigned int sunxi_soc_chipid[4];
 static unsigned int sunxi_pmu_chipid[4];
 static unsigned int sunxi_serial[4];
+static unsigned char  sunxi_rootpk[32];
 
 unsigned int sunxi_get_soc_ver(void)
 {
@@ -66,6 +67,13 @@ int sunxi_get_serial(u8 *serial)
 	return 0;
 }
 EXPORT_SYMBOL(sunxi_get_serial);
+
+int sunxi_get_rootpk(u8 *rootpk)
+{
+	memcpy(rootpk, sunxi_rootpk,ARRAY_SIZE(sunxi_rootpk));
+	return 0;
+}
+EXPORT_SYMBOL(sunxi_get_rootpk);
 
 unsigned int sunxi_get_board_vendor_id(void)
 {
@@ -361,6 +369,9 @@ void __init sunxi_soc_ver_init(void)
 
 void __init sunxi_chip_id_init(void)
 {
+	unsigned int i = 0 ;
+
+	memset( sunxi_rootpk, 0 , ARRAY_SIZE(sunxi_rootpk));
 	/* PMU chip id init */
 #if (defined CONFIG_SUNXI_ARISC) && (defined CONFIG_AW_AXP)
 	arisc_axp_get_chip_id((u8 *)sunxi_pmu_chipid);
@@ -396,12 +407,17 @@ void __init sunxi_chip_id_init(void)
 	sunxi_soc_chipid[1] = sunxi_smc_readl(SUNXI_SID_VBASE + 0x200 + 0x4);
 	sunxi_soc_chipid[2] = sunxi_smc_readl(SUNXI_SID_VBASE + 0x200 + 0x8);
 	sunxi_soc_chipid[3] = sunxi_smc_readl(SUNXI_SID_VBASE + 0x200 + 0xc);
+
+	for(i = 0 ; i < ARRAY_SIZE(sunxi_rootpk) ; i +=4)
+		*(u32 *)(sunxi_rootpk+i) = sunxi_smc_readl(SUNXI_SID_VBASE + 0x200 + 0x64 + i);
+
 #else
 
 	sunxi_soc_chipid[0] = readl(SUNXI_SID_VBASE);
 	sunxi_soc_chipid[1] = readl(SUNXI_SID_VBASE + 0x4);
 	sunxi_soc_chipid[2] = readl(SUNXI_SID_VBASE + 0x8);
 	sunxi_soc_chipid[3] = readl(SUNXI_SID_VBASE + 0xc);
+
 
 #endif
 	sunxi_serial[0] = sunxi_soc_chipid[3];
