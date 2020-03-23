@@ -25,6 +25,8 @@
 #define CHECK_SOC_VERSION     0x01
 #define CHECK_SOC_BONDING     0x03
 #define CHECK_SOC_BOOT_ATTR   0x04
+#define CHECK_SOC_CUSTOMER_ID 0x05
+#define CHECK_SOC_ROOTPK   0x06
 
 
 static int soc_info_open(struct inode *inode, struct file *file)
@@ -43,6 +45,7 @@ static long soc_info_ioctl(struct file *file, unsigned int ioctl_num,
 
 	int err = 0;
 	char id[8];
+	u8 rootpk[32];
 
 	switch(ioctl_num){
 		case CHECK_SOC_SECURE_ATTR:
@@ -63,11 +66,19 @@ static long soc_info_ioctl(struct file *file, unsigned int ioctl_num,
 			pr_debug("soc id:%s\n", id);
 			break;
 		case CHECK_SOC_BOOT_ATTR:
-			err = sunxi_boot_is_secure() ; 
+			err = sunxi_boot_is_secure() ;
 			if(err)
 				pr_debug("secure boot %d\n",err);
 			else
 				pr_debug("normal boot %d\n",err);
+			break;
+		case CHECK_SOC_CUSTOMER_ID:
+			pr_err("Get soc customer id fail\n");
+			err = -1;
+			break;
+		case CHECK_SOC_ROOTPK:
+			sunxi_get_rootpk((u8 *)(&rootpk[0]));
+			err = copy_to_user((void __user *)ioctl_param, rootpk,ARRAY_SIZE(rootpk));
 			break;
 		default:
 			pr_err("un supported cmd:%d\n", ioctl_num);
@@ -196,9 +207,9 @@ ssize_t sys_info_show(struct class *class, struct class_attribute *attr, char *b
 		size += sprintf(buf + size, "%s\n", "normal");
 
 	/* chipid */
-	sunxi_get_serial((u8 *)databuf);
+	sunxi_get_soc_chipid((u8 *)databuf);
 	for (i = 0; i < 4; i++)
-		sprintf(tmpbuf + i*8, "%08x", databuf[i]);
+		sprintf(tmpbuf + i*8, "%08x", databuf[3 - i]);
 	tmpbuf[128] = 0;
 	size += sprintf(buf + size, "sunxi_chipid      : %s\n", tmpbuf);
 
@@ -212,6 +223,14 @@ ssize_t sys_info_show(struct class *class, struct class_attribute *attr, char *b
 	/* Board vendor id*/
 	databuf[0] = sunxi_get_board_vendor_id();
 	size += sprintf(buf + size, "sunxi_board_id    : %d(%d)\n", (databuf[0]<0)?(-1):(databuf[0]&~(0xe0)), (databuf[0]<0)?(-1):((databuf[0]>>5)&0x01));
+
+	/* root pk value */
+	sunxi_get_rootpk(&tmpbuf[0]);
+	size += sprintf(buf + size , "sunxi_rootpk    :  %x %x %x %x\n",
+				*(u32 *)(&tmpbuf[0]),
+				*(u32 *)(&tmpbuf[4]),
+				*(u32 *)(&tmpbuf[8]),
+				*(u32 *)(&tmpbuf[12]));
 
 	return size;
 }

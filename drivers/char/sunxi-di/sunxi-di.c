@@ -64,8 +64,12 @@ static void di_timer_handle(unsigned long arg)
 	di_irq_enable(0);
 	di_irq_clear();
 	di_reset();
-	memset(di_data.in_flag, 0, flag_size);
-	memset(di_data.out_flag, 0, flag_size);
+	if (NULL != di_data.in_flag) {
+		memset(di_data.in_flag, 0, flag_size);
+	}
+	if (NULL != di_data.out_flag) {
+		memset(di_data.out_flag, 0, flag_size);
+	}
 	dprintk(DEBUG_INT, "di_timer_handle: timeout \n");
 }
 
@@ -137,6 +141,7 @@ static void di_clk_uncfg(void)
 		printk(KERN_ERR "di_clk handle is invalid, just return!\n");
 		return;
 	} else {
+		clk_disable_unprepare(di_clk);
 		clk_put(di_clk);
 		di_clk = NULL;
 	}
@@ -201,8 +206,9 @@ clk_cfg_fail:
 
 static void sunxi_di_params_exit(void)
 {
-  di_clk_uncfg();
-  free_irq(SW_INT_IRQNO_DI, di_device);
+	di_clk_uncfg();
+	free_irq(SW_INT_IRQNO_DI, di_device);
+	return ;
 }
 
 static void sunxi_di_disabledrv(void)
@@ -408,6 +414,8 @@ static int __init sunxi_di_init(void)
 
 	atomic_set(&di_data.di_complete, 0);
 	atomic_set(&di_data.enable, 0);
+	di_data.in_flag = NULL;
+	di_data.out_flag = NULL;
 
 	init_waitqueue_head(&di_data.wait);
 
