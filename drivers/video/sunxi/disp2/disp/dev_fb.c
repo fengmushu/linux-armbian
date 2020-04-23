@@ -386,7 +386,7 @@ static s32 disp_fb_to_var(disp_pixel_format format, struct fb_var_screeninfo *va
 
 		break;
 	default:
-		__wrn("[FB]not support format %d\n", format);
+		__wrn("[FB]not support format 0x%2x\n", format);
 	}
 
 	__inf("disp_fb_to_var, format%d para: %dbpp, alpha(%d,%d),reg(%d,%d),green(%d,%d),blue(%d,%d)\n", (int)format, (int)var->bits_per_pixel,
@@ -910,6 +910,7 @@ static struct fb_ops dispfb_ops =
 
 };
 
+#if 0
 static int Fb_map_kernel_logo(__u32 sel, struct fb_info *info)
 {
 	void *vaddr = NULL;
@@ -1043,6 +1044,7 @@ static int Fb_map_kernel_logo(__u32 sel, struct fb_info *info)
 	Fb_unmap_kernel(vaddr);
 	return 0;
 }
+#endif
 
 #if 0
 static int Fb_map_boot_logo(__u32 sel, struct fb_info *info)
@@ -1186,7 +1188,7 @@ static s32 display_fb_request(u32 fb_id, disp_fb_create_info *fb_para)
 			config.layer_id = g_fbi.layer_hdl[fb_id][1];
 			config.enable = 1;
 
-			Fb_map_kernel_logo(sel, info);
+			// Fb_map_kernel_logo(sel, info);
 			if(g_disp_drv.para.boot_info.sync == 1) {
 				if((sel == g_disp_drv.para.boot_info.disp) &&
 				(g_disp_drv.para.boot_info.type != DISP_OUTPUT_TYPE_NONE)) {

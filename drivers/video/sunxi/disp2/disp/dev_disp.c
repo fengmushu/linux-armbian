@@ -475,6 +475,7 @@ static s32 parser_disp_init_para(disp_init_para * init_para)
 		init_para->fb_height[screen]= value;
 	}
 
+	#if 0
 	pr_info("====display init para begin====\n");
 	pr_info("b_init:%d\n", init_para->b_init);
 	pr_info("disp_mode:%d\n\n", init_para->disp_mode);
@@ -489,6 +490,7 @@ static s32 parser_disp_init_para(disp_init_para * init_para)
 		pr_info("fb_height[%d]:%d\n", screen, init_para->fb_height[screen]);
 	}
 	pr_info("====display init para end====\n");
+	#endif //debug dump
 
 	return 0;
 }
