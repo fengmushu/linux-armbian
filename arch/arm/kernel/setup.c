@@ -1090,6 +1090,8 @@ void __init setup_arch(char **cmdline_p)
 	script_init();
 #endif
 
+	reserve_crashkernel();
+
 #ifdef CONFIG_SMP
 	if (is_smp()) {
 		if (!mdesc->smp_init || !mdesc->smp_init())
@@ -1098,7 +1100,6 @@ void __init setup_arch(char **cmdline_p)
 		smp_build_mpidr_hash();
 	}
 #endif
-	reserve_crashkernel();
 
 	tcm_init();
 
