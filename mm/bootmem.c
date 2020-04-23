@@ -323,12 +323,16 @@ static int __init mark_bootmem(unsigned long start, unsigned long end,
 				int reserve, int flags)
 {
 	unsigned long pos;
+	unsigned long max = 0x0L;
 	bootmem_data_t *bdata;
 
 	pos = start;
 	list_for_each_entry(bdata, &bdata_list, list) {
 		int err;
-		unsigned long max;
+
+		printk("%s: min_pfn %X - low_pfn %X\n", __func__, \
+		 						bdata->node_min_pfn, \
+								bdata->node_low_pfn);
 
 		if (pos < bdata->node_min_pfn ||
 		    pos >= bdata->node_low_pfn) {
@@ -348,7 +352,9 @@ static int __init mark_bootmem(unsigned long start, unsigned long end,
 			return 0;
 		pos = bdata->node_low_pfn;
 	}
-	BUG();
+	printk("%s: %X-%X max: %X\n", __func__, start, end, max);
+	WARN_ON_ONCE(1);
+	return -EBUSY;
 }
 
 /**
