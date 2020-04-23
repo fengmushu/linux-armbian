@@ -249,11 +249,13 @@ static int sunxi_check_secure_area(u32 start, u32 blkcnt)
 }
 #endif
 
+void sunxi_mci_hw_reset(struct mmc_host *mmc);
+
 static s32 sunxi_mci_init_host(struct sunxi_mmc_host* smc_host)
 {
 	u32 rval;
 
-	SMC_DBG(smc_host, "MMC Driver init host %d\n", smc_host->pdev->id);
+	SMC_MSG(smc_host, "MMC Driver init host %d\n", smc_host->pdev->id);
 
 	/* reset controller */
 	rval = mci_readl(smc_host, REG_GCTRL) | SDXC_HWReset;
@@ -2220,7 +2222,7 @@ static void sunxi_mci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 	BUG_ON(ios->power_mode >= sizeof(pwr_mode)/sizeof(pwr_mode[0]));
 	BUG_ON(ios->signal_voltage >= sizeof(vdd)/sizeof(vdd[0]));
 	BUG_ON(ios->timing >= sizeof(timing)/sizeof(timing[0]));
-	SMC_MSG(smc_host, "sdc%d set ios: "
+	SMC_DBG(smc_host, "sdc%d set ios: "
 		"clk %dHz bm %s pm %s vdd %s width %d timing %s dt %s\n",
 		smc_host->pdev->id, ios->clock, bus_mode[ios->bus_mode],
 		pwr_mode[ios->power_mode], vdd[ios->signal_voltage],
@@ -2436,6 +2438,7 @@ void sunxi_mci_hw_reset(struct mmc_host *mmc)
 	u32 id = smc_host->pdev->id;
 
 	if (id == 2 || id == 3) {
+		SMC_MSG(smc_host, "sunxi mci reset hw ...\n");
 		mci_writel(smc_host, REG_HWRST, 0);
 		udelay(10);
 		mci_writel(smc_host, REG_HWRST, 1);
