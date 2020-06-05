@@ -68,6 +68,7 @@ static int mmc_queue_thread(void *d)
 		if (req || mq->mqrq_prev->req) {
 			set_current_state(TASK_RUNNING);
 			mq->issue_fn(mq, req);
+			cond_resched();
 		} else {
 			if (kthread_should_stop()) {
 				set_current_state(TASK_RUNNING);
